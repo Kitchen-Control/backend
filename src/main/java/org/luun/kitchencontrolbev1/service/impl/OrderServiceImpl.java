@@ -5,6 +5,7 @@ import org.luun.kitchencontrolbev1.dto.response.OrderDetailResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.OrderDetail;
+import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.luun.kitchencontrolbev1.repository.OrderRepository;
 import org.luun.kitchencontrolbev1.service.OrderService;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,21 @@ public class OrderServiceImpl implements OrderService {
         return orders.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderResponse createOrder(Order order) {
+        Order savedOrder = orderRepository.save(order);
+        return mapToResponse(savedOrder);
+    }
+
+    @Override
+    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        order.setStatus(status);
+        Order updatedOrder = orderRepository.save(order);
+        return mapToResponse(updatedOrder);
     }
 
     private OrderResponse mapToResponse(Order order) {
