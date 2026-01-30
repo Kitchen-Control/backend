@@ -1,5 +1,8 @@
 package org.luun.kitchencontrolbev1.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.luun.kitchencontrolbev1.dto.request.LoginRequest;
 import org.luun.kitchencontrolbev1.entity.User;
 import org.luun.kitchencontrolbev1.service.AuthService;
@@ -18,15 +21,20 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Login with username and password")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful!")
+    })
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             User user = authService.login(loginRequest);
             // On successful login, return the user details (excluding password)
             user.setPassword(null); // Avoid sending password back to the client
+
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             // If login fails, return an unauthorized status
-            return ResponseEntity.status(401).body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
