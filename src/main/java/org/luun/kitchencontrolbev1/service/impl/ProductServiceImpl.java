@@ -53,6 +53,20 @@ public class ProductServiceImpl implements ProductService {
         return mapToResponse(savedProduct);
     }
 
+    @Override
+    public List<ProductResponse> searchProductByProductName(String keyword) {
+        List<Product> products = productRepository.searchProductByProductNameContainingIgnoreCase(keyword);
+        // Assuming we want to return the first matched product
+        if (products.isEmpty()) {
+            return null;
+        }
+
+        List<ProductResponse> responses = products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        return responses;
+    }
+
     private ProductResponse mapToResponse(Product product) {
         if (product == null) return null;
         ProductResponse response = new ProductResponse();

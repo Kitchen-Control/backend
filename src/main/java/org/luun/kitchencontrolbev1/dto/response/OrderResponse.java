@@ -1,31 +1,38 @@
 package org.luun.kitchencontrolbev1.dto.response;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderResponse {
-    private Integer orderId;
+    Integer orderId;
     
     // Delivery info
-    private Integer deliveryId;
+    Integer deliveryId;
     
     // Store info
-    private Integer storeId;
-    private String storeName;
+    Integer storeId;
+    String storeName;
     
-    private LocalDateTime orderDate;
-    private OrderStatus status;
-    private String img;
-    private String comment;
+    LocalDateTime orderDate;
+    OrderStatus status;
+    String img;
+    String comment;
     
     // Details
-    private List<OrderDetailResponse> orderDetails;
+    List<OrderDetailResponse> orderDetails;
     
     // Feedback info (optional)
-    private Integer feedbackId;
-    private Integer feedbackRating;
-    private String feedbackComment;
+    Integer feedbackId;
+    Integer feedbackRating;
+    String feedbackComment;
 }
