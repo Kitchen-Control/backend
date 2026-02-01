@@ -2,6 +2,7 @@ package org.luun.kitchencontrolbev1.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.request.ProductRequest;
 import org.luun.kitchencontrolbev1.dto.response.ProductResponse;
 import org.luun.kitchencontrolbev1.entity.Product;
 import org.luun.kitchencontrolbev1.service.ProductService;
@@ -37,8 +38,8 @@ public class ProductController {
 
     //Creating a new product
     @PostMapping
-    public ProductResponse createProduct(@RequestBody Product product) {
-        return productService.createProduct(product);
+    public ProductResponse createProduct(@RequestBody ProductRequest request) {
+        return productService.createProduct(request);
     }
 
     //Updating a product

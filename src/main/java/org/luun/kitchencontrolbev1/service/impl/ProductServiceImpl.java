@@ -1,8 +1,10 @@
 package org.luun.kitchencontrolbev1.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.request.ProductRequest;
 import org.luun.kitchencontrolbev1.dto.response.ProductResponse;
 import org.luun.kitchencontrolbev1.entity.Product;
+import org.luun.kitchencontrolbev1.enums.ProductType;
 import org.luun.kitchencontrolbev1.repository.ProductRepository;
 import org.luun.kitchencontrolbev1.service.ProductService;
 import org.springframework.stereotype.Service;
@@ -34,9 +36,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse createProduct(Product product) {
-        Product newProduct = productRepository.save(product);
-        return mapToResponse(newProduct);
+    public ProductResponse createProduct(ProductRequest request) {
+        Product product = new Product();
+        product.setProductName(request.getProductName());
+        product.setProductType(ProductType.valueOf(request.getProductType()));
+        product.setUnit(request.getUnit());
+        product.setShelfLifeDays(request.getShelfLifeDay());
+        
+        Product savedProduct = productRepository.save(product);
+        return mapToResponse(savedProduct);
     }
 
     @Override
@@ -56,15 +64,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductResponse> searchProductByProductName(String keyword) {
         List<Product> products = productRepository.searchProductByProductNameContainingIgnoreCase(keyword);
-        // Assuming we want to return the first matched product
         if (products.isEmpty()) {
             return null;
         }
 
-        List<ProductResponse> responses = products.stream()
+        return products.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
-        return responses;
     }
 
     private ProductResponse mapToResponse(Product product) {
@@ -73,7 +79,6 @@ public class ProductServiceImpl implements ProductService {
         response.setProductId(product.getProductId());
         response.setProductName(product.getProductName());
 
-        // Check if productType is not null before toString()
         if (product.getProductType() != null) {
             response.setProductType(product.getProductType().toString());
         }
