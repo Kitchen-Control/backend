@@ -72,13 +72,12 @@ public class OrderServiceImpl implements OrderService {
             for (OrderDetailRequest detailRequest : orderRequest.getOrderDetails()) {
                 OrderDetail detail = new OrderDetail();
                 detail.setOrder(savedOrder);
-                
                 Product product = productRepository.findById(detailRequest.getProductId())
                         .orElseThrow(() -> new RuntimeException("Product not found with id: " + detailRequest.getProductId()));
                 detail.setProduct(product);
-                
                 detail.setQuantity(detailRequest.getQuantity());
-                
+
+                //After setting data to object, save it to database and add to list
                 orderDetails.add(orderDetailRepository.save(detail));
             }
         }
