@@ -1,15 +1,25 @@
 package org.luun.kitchencontrolbev1.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.request.OrderDetailRequest;
+import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
 import org.luun.kitchencontrolbev1.dto.response.OrderDetailResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.OrderDetail;
+import org.luun.kitchencontrolbev1.entity.Product;
+import org.luun.kitchencontrolbev1.entity.Store;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
+import org.luun.kitchencontrolbev1.repository.OrderDetailRepository;
 import org.luun.kitchencontrolbev1.repository.OrderRepository;
+import org.luun.kitchencontrolbev1.repository.ProductRepository;
+import org.luun.kitchencontrolbev1.repository.StoreRepository;
 import org.luun.kitchencontrolbev1.service.OrderService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
+    private final StoreRepository storeRepository;
+    private final ProductRepository productRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
     @Override
     public List<OrderResponse> getOrders() {
@@ -35,8 +48,38 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponse createOrder(Order order) {
+    @Transactional
+    public OrderResponse createOrder(OrderRequest request) {
+        // 1. Find Store
+        Store store = storeRepository.findById(request.getStoreId())
+                .orElseThrow(() -> new RuntimeException("Store not found with id: " + request.getStoreId()));
+
+        // 2. Create Order
+        Order order = new Order();
+        order.setStore(store);
+        order.setOrderDate(LocalDateTime.now());
+        order.setStatus(OrderStatus.WAITTING);
+        order.setComment(request.getComment());
+
         Order savedOrder = orderRepository.save(order);
+
+        // 3. Create OrderDetails
+        List<OrderDetail> orderDetails = new ArrayList<>();
+        if (request.getOrderDetails() != null) {
+            for (OrderDetailRequest detailRequest : request.getOrderDetails()) {
+                Product product = productRepository.findById(detailRequest.getProductId())
+                        .orElseThrow(() -> new RuntimeException("Product not found with id: " + detailRequest.getProductId()));
+
+                OrderDetail detail = new OrderDetail();
+                detail.setOrder(savedOrder);
+                detail.setProduct(product);
+                detail.setQuantity(detailRequest.getQuantity());
+                
+                orderDetails.add(orderDetailRepository.save(detail));
+            }
+        }
+
+        savedOrder.setOrderDetails(orderDetails);
         return mapToResponse(savedOrder);
     }
 

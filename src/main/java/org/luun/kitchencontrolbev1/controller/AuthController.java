@@ -1,8 +1,11 @@
 package org.luun.kitchencontrolbev1.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.luun.kitchencontrolbev1.dto.request.LoginRequest;
 import org.luun.kitchencontrolbev1.entity.User;
 import org.luun.kitchencontrolbev1.service.AuthService;
@@ -15,25 +18,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Authentication", description = "APIs for User Authentication and Authorization")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
     @PostMapping("/login")
-    @Operation(summary = "Login", description = "Login with username and password")
+    @Operation(summary = "User Login", description = "Authenticates a user with username and password and returns user details.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful!")
+            @ApiResponse(responseCode = "200", description = "Login successful", 
+                    content = @Content(schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid username or password"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             User user = authService.login(loginRequest);
-            // On successful login, return the user details (excluding password)
-            user.setPassword(null); // Avoid sending password back to the client
-
+            user.setPassword(null);
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
-            // If login fails, return an unauthorized status
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
