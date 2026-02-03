@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.request.ProductRequest;
 import org.luun.kitchencontrolbev1.dto.response.ProductResponse;
 import org.luun.kitchencontrolbev1.entity.Product;
 import org.luun.kitchencontrolbev1.service.ProductService;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Products API")
 @RequestMapping("/products")
 @Tag(name = "Products", description = "APIs for managing products (Raw materials and Finished products)")
 public class ProductController {
