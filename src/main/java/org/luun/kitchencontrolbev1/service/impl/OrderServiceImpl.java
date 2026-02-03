@@ -50,40 +50,37 @@ public class OrderServiceImpl implements OrderService {
     //Creating orders method
     @Override
     @Transactional
-    public OrderResponse createOrder(OrderRequest orderRequest) {
-        // 1. Create and save Order
+    public OrderResponse createOrder(OrderRequest request) {
+        // 1. Find Store
+        Store store = storeRepository.findById(request.getStoreId())
+                .orElseThrow(() -> new RuntimeException("Store not found with id: " + request.getStoreId()));
+
+        // 2. Create Order
         Order order = new Order();
-        
-        // Set Store
-        Store store = storeRepository.findById(orderRequest.getStoreId())
-                .orElseThrow(() -> new RuntimeException("Store not found with id: " + orderRequest.getStoreId()));
         order.setStore(store);
-        
-        // Set basic info
         order.setOrderDate(LocalDateTime.now());
-        order.setStatus(OrderStatus.WAITTING); // Default status
-        order.setComment(orderRequest.getComment());
-        
+        order.setStatus(OrderStatus.WAITTING);
+        order.setComment(request.getComment());
+
         Order savedOrder = orderRepository.save(order);
-        
-        // 2. Create and save OrderDetails
+
+        // 3. Create OrderDetails
         List<OrderDetail> orderDetails = new ArrayList<>();
-        if (orderRequest.getOrderDetails() != null) {
-            for (OrderDetailRequest detailRequest : orderRequest.getOrderDetails()) {
-                OrderDetail detail = new OrderDetail();
-                detail.setOrder(savedOrder);
+        if (request.getOrderDetails() != null) {
+            for (OrderDetailRequest detailRequest : request.getOrderDetails()) {
                 Product product = productRepository.findById(detailRequest.getProductId())
                         .orElseThrow(() -> new RuntimeException("Product not found with id: " + detailRequest.getProductId()));
+
+                OrderDetail detail = new OrderDetail();
+                detail.setOrder(savedOrder);
                 detail.setProduct(product);
                 detail.setQuantity(detailRequest.getQuantity());
-
-                //After setting data to object, save it to database and add to list
+                
                 orderDetails.add(orderDetailRepository.save(detail));
             }
         }
-        
-        savedOrder.setOrderDetails(orderDetails);
 
+        savedOrder.setOrderDetails(orderDetails);
         return mapToResponse(savedOrder);
     }
 
