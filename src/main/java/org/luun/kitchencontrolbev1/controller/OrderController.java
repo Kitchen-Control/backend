@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
-import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.luun.kitchencontrolbev1.service.OrderService;
 import org.springframework.web.bind.annotation.*;
@@ -38,8 +38,8 @@ public class OrderController {
     @PostMapping
     @Operation(summary = "Create order")
     public OrderResponse createOrder(
-            @Parameter(description = "Order details", required = true) @RequestBody Order order) {
-        return orderService.createOrder(order);
+            @Parameter(description = "Order details", required = true) @RequestBody OrderRequest orderRequest) {
+        return orderService.createOrder(orderRequest);
     }
 
     //Updating status of an order
