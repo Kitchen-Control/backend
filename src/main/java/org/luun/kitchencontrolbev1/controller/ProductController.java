@@ -42,8 +42,8 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Product created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid product data provided")
     })
-    public ProductResponse createProduct(@RequestBody Product product) {
-        return productService.createProduct(product);
+    public ProductResponse createProduct(@RequestBody ProductRequest request) {
+        return productService.createProduct(request);
     }
 
     @PutMapping("/{productId}")
