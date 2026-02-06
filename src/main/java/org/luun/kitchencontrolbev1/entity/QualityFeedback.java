@@ -21,11 +21,6 @@ public class QualityFeedback {
     @JoinColumn(name = "order_id", unique = true)
     private Order order;
 
-    @JsonBackReference
-    @ManyToOne
-    @JoinColumn(name = "store_id")
-    private Store store;
-
     @Column(name = "rating")
     private Integer rating;
 

@@ -32,8 +32,8 @@ public class User {
     private Role role;
 
     @JsonBackReference
-    @ManyToOne
-    @JoinColumn(name = "store_id")
+    @OneToOne
+    @JoinColumn(name = "store_id", unique = true)
     private Store store;
 
     @JsonManagedReference

@@ -41,11 +41,11 @@ public class LogBatch {
     private LocalDate expiryDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition = "log_batches_enum")
     private LogBatchStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
+    @Column(name = "type", columnDefinition = "log_batches_type")
     private LogBatchType type;
 
     @Column(name = "created_at")
@@ -58,4 +58,8 @@ public class LogBatch {
     @JsonManagedReference
     @OneToMany(mappedBy = "batch")
     private List<InventoryTransaction> inventoryTransactions;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "batch")
+    private List<OrderDetailFill> orderDetailFills;
 }

@@ -31,13 +31,6 @@ public class QualityFeedbackServiceImpl implements QualityFeedbackService {
     }
 
     @Override
-    public List<QualityFeedbackResponse> getFeedbacksByStoreId(Integer storeId) {
-        return feedbackRepository.findByStoreStoreId(storeId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     @Transactional
     public QualityFeedbackResponse createFeedback(QualityFeedbackRequest request) {
         // 1. Validate Order
@@ -58,7 +51,6 @@ public class QualityFeedbackServiceImpl implements QualityFeedbackService {
         // 4. Create Feedback
         QualityFeedback feedback = new QualityFeedback();
         feedback.setOrder(order);
-        feedback.setStore(order.getStore()); // Feedback is associated with the store of the order
         feedback.setRating(request.getRating());
         feedback.setComment(request.getComment());
         feedback.setCreatedAt(LocalDateTime.now());
@@ -74,11 +66,7 @@ public class QualityFeedbackServiceImpl implements QualityFeedbackService {
         if (feedback.getOrder() != null) {
             response.setOrderId(feedback.getOrder().getOrderId());
         }
-        
-        if (feedback.getStore() != null) {
-            response.setStoreId(feedback.getStore().getStoreId());
-            response.setStoreName(feedback.getStore().getStoreName());
-        }
+
         
         response.setRating(feedback.getRating());
         response.setComment(feedback.getComment());
