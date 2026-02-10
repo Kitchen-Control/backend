@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.response.ProductionPlanResponse;
 import org.luun.kitchencontrolbev1.entity.ProductionPlan;
 import org.luun.kitchencontrolbev1.service.ProductionPlanService;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class ProductionPlanController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     })
     @GetMapping
-    public List<ProductionPlan> getProductionPlans() {
+    public List<ProductionPlanResponse> getProductionPlans() {
         return productionPlanService.getProductionPlans();
     }
 
@@ -35,7 +36,7 @@ public class ProductionPlanController {
             @ApiResponse(responseCode = "404", description = "Production plan not found")
     })
     @GetMapping("/{id}")
-    public ProductionPlan getProductionPlanById(
+    public ProductionPlanResponse getProductionPlanById(
             @Parameter(description = "ID of the production plan to retrieve") @PathVariable Integer id) {
         return productionPlanService.getProductionPlanById(id);
     }
@@ -45,7 +46,7 @@ public class ProductionPlanController {
             @ApiResponse(responseCode = "200", description = "Successfully created production plan")
     })
     @PostMapping
-    public ProductionPlan createProductionPlan(@RequestBody ProductionPlan productionPlan) {
+    public ProductionPlanResponse createProductionPlan(@RequestBody ProductionPlan productionPlan) {
         return productionPlanService.createProductionPlan(productionPlan);
     }
 }

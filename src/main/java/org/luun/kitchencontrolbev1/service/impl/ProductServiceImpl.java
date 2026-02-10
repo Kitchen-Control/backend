@@ -26,13 +26,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse getProductByType(String productType) {
+    public List<ProductResponse> getProductByType(String productType) {
         // Assuming findByProductType exists in repository or needs to be added
         // For now, let's assume it returns a single Product or null
         // If it returns a List, this logic needs adjustment
-        // Product product = productRepository.findByProductType(productType);
-        // return mapToResponse(product);
-        return null; // Placeholder until repository is updated
+        List<Product> products = productRepository.findByProductType(productType);
+         return products.stream()
+                 .map(this::mapToResponse)
+                 .collect(Collectors.toList());
     }
 
     @Override

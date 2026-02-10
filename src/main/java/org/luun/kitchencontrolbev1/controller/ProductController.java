@@ -30,7 +30,7 @@ public class ProductController {
 
     @GetMapping("/get-by-type/{productType}")
     @Operation(summary = "Get product by type", description = "Retrieves a product based on its type (e.g., RAW_MATERIAL, FINISHED_PRODUCT).")
-    public ProductResponse getProductByType(
+    public List<ProductResponse> getProductByType(
             @Parameter(description = "Type of the product", example = "RAW_MATERIAL") @PathVariable String productType) {
         return productService.getProductByType(productType);
     }
