@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,8 +31,9 @@ public class Receipt {
     @Column(name = "export_date")
     private LocalDateTime exportDate;
 
-    @Column(name = "status", length = 255)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "receipts_status")
+    private ReceiptStatus status;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
