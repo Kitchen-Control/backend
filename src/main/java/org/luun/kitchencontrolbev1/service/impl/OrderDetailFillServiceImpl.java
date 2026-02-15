@@ -67,6 +67,7 @@ public class OrderDetailFillServiceImpl implements OrderDetailFillService {
 
     private OrderDetailFillResponse mapToResponse(OrderDetailFill orderDetailFill) {
         OrderDetailFillResponse response = new OrderDetailFillResponse();
+
         response.setFillId(orderDetailFill.getFillId());
         if (orderDetailFill.getOrderDetail() != null) {
             response.setOrderDetailId(orderDetailFill.getOrderDetail().getOrderDetailId());

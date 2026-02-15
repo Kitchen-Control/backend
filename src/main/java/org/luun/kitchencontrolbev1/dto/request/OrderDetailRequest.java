@@ -1,14 +1,10 @@
 package org.luun.kitchencontrolbev1.dto.request;
 
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import lombok.Data;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderDetailRequest {
-    Integer productId;
-    Float quantity;
+    private Integer orderId;
+    private Integer productId;
+    private Float quantity;
 }
