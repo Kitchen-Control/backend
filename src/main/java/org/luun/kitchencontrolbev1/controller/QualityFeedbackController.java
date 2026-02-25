@@ -24,12 +24,6 @@ public class QualityFeedbackController {
         return feedbackService.getAllFeedbacks();
     }
 
-    @GetMapping("/store/{storeId}")
-    @Operation(summary = "Get feedbacks by store ID")
-    public List<QualityFeedbackResponse> getFeedbacksByStoreId(@PathVariable Integer storeId) {
-        return feedbackService.getFeedbacksByStoreId(storeId);
-    }
-
     @PostMapping
     @Operation(summary = "Create a new feedback for an order")
     public QualityFeedbackResponse createFeedback(@RequestBody QualityFeedbackRequest request) {

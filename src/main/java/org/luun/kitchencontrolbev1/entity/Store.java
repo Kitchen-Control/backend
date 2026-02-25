@@ -26,14 +26,10 @@ public class Store {
     private String phone;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "store")
-    private List<User> users;
+    @OneToOne(mappedBy = "store")
+    private User user;
 
     @JsonManagedReference
     @OneToMany(mappedBy = "store")
     private List<Order> orders;
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "store")
-    private List<QualityFeedback> qualityFeedbacks;
 }

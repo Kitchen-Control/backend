@@ -7,6 +7,5 @@ import java.util.List;
 
 public interface QualityFeedbackService {
     List<QualityFeedbackResponse> getAllFeedbacks();
-    List<QualityFeedbackResponse> getFeedbacksByStoreId(Integer storeId);
     QualityFeedbackResponse createFeedback(QualityFeedbackRequest request);
 }

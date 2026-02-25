@@ -28,7 +28,7 @@ public class InventoryTransaction {
     private LogBatch batch;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
+    @Column(name = "type", columnDefinition = "inventories_type")
     private InventoryTransactionType type;
 
     @Column(name = "quantity")
@@ -39,4 +39,9 @@ public class InventoryTransaction {
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
+
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "receipt_id")
+    private Receipt receipt;
 }

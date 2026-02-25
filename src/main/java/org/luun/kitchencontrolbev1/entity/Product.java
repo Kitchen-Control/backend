@@ -22,7 +22,7 @@ public class Product {
     private String productName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "product_type")
+    @Column(name = "product_type", columnDefinition = "product_type_enum")
     private ProductType productType;
 
     @Column(name = "unit", length = 255)

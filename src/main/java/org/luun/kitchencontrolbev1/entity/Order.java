@@ -33,7 +33,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition = "orders_status")
     private OrderStatus status;
 
     @Column(name = "img", length = 255)
@@ -49,4 +49,8 @@ public class Order {
     @JsonManagedReference
     @OneToOne(mappedBy = "order")
     private QualityFeedback qualityFeedback;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "order")
+    private List<Receipt> receipts;
 }
