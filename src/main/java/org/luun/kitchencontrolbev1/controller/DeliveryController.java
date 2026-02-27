@@ -32,8 +32,22 @@ public class DeliveryController {
     @PatchMapping("/{deliveryId}/assign-shipper/{shipperId}")
     @Operation(summary = "Assign a shipper to a delivery")
     public DeliveryResponse assignShipperToDelivery(
-            @PathVariable Integer deliveryId, 
+            @PathVariable Integer deliveryId,
             @PathVariable Integer shipperId) {
         return deliveryService.assignShipperToDelivery(deliveryId, shipperId);
+    }
+
+    @PostMapping("/create")
+    @Operation(summary = "Tạo chuyến xe với danh sách order WAITING và gán Shipper (Chuyển Order -> PROCESSING, và chạy FEFO)")
+    public DeliveryResponse createDeliveryWithOrders(
+            @RequestParam List<Integer> orderIds,
+            @RequestParam Integer shipperId) {
+        return deliveryService.createDeliveryWithOrders(orderIds, shipperId);
+    }
+
+    @PatchMapping("/{deliveryId}/start")
+    @Operation(summary = "Shipper bắt đầu đi giao (Chuyển Order -> DELIVERING)")
+    public DeliveryResponse startDelivery(@PathVariable Integer deliveryId) {
+        return deliveryService.startDelivery(deliveryId);
     }
 }
