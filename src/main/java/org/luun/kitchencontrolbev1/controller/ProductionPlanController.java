@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.request.ProductionPlanRequest;
 import org.luun.kitchencontrolbev1.dto.response.ProductionPlanResponse;
-import org.luun.kitchencontrolbev1.entity.ProductionPlan;
 import org.luun.kitchencontrolbev1.service.ProductionPlanService;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,7 +46,9 @@ public class ProductionPlanController {
             @ApiResponse(responseCode = "200", description = "Successfully created production plan")
     })
     @PostMapping
-    public ProductionPlanResponse createProductionPlan(@RequestBody ProductionPlan productionPlan) {
-        return productionPlanService.createProductionPlan(productionPlan);
+    public ProductionPlanResponse createProductionPlan(@RequestBody ProductionPlanRequest request) {
+        // Note: The service layer will handle the conversion from DTO to Entity
+        // This controller is now clean and only works with DTOs
+        return productionPlanService.createProductionPlan(request);
     }
 }

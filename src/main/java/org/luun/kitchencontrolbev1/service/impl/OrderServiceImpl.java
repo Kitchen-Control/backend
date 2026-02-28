@@ -55,16 +55,14 @@ public class OrderServiceImpl implements OrderService {
         Store store = storeRepository.findById(request.getStoreId())
                 .orElseThrow(() -> new RuntimeException("Store not found with id: " + request.getStoreId()));
 
-        // 2. Create Order
+        // 2. Create Order object
         Order order = new Order();
         order.setStore(store);
         order.setOrderDate(LocalDateTime.now());
         order.setStatus(OrderStatus.WAITTING);
         order.setComment(request.getComment());
 
-        Order savedOrder = orderRepository.save(order);
-
-        // 3. Create OrderDetails
+        // 3. Create OrderDetail objects and set the bidirectional relationship
         List<OrderDetail> orderDetails = new ArrayList<>();
         if (request.getOrderDetails() != null) {
             for (OrderDetailRequest detailRequest : request.getOrderDetails()) {
@@ -72,15 +70,20 @@ public class OrderServiceImpl implements OrderService {
                         .orElseThrow(() -> new RuntimeException("Product not found with id: " + detailRequest.getProductId()));
 
                 OrderDetail detail = new OrderDetail();
-                detail.setOrder(savedOrder);
                 detail.setProduct(product);
                 detail.setQuantity(detailRequest.getQuantity());
+                detail.setOrder(order); // Set the parent Order for the detail
                 
-                orderDetails.add(orderDetailRepository.save(detail));
+                orderDetails.add(detail);
             }
         }
 
-        savedOrder.setOrderDetails(orderDetails);
+        // 4. Set the list of details on the order
+        order.setOrderDetails(orderDetails);
+
+        // 5. Save the Order (and thanks to Cascade, OrderDetails will be saved too)
+        Order savedOrder = orderRepository.save(order);
+
         return mapToResponse(savedOrder);
     }
 
@@ -107,7 +110,7 @@ public class OrderServiceImpl implements OrderService {
             response.setStoreId(order.getStore().getStoreId());
             response.setStoreName(order.getStore().getStoreName());
         }
-        
+
         response.setOrderDate(order.getOrderDate());
         response.setStatus(order.getStatus());
         response.setImg(order.getImg());

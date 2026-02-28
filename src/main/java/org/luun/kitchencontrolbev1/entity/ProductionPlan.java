@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -35,10 +36,22 @@ public class ProductionPlan {
     private String note;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "productionPlan")
-    private List<ProductionPlanDetail> productionPlanDetails;
+    @OneToMany(mappedBy = "productionPlan", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<ProductionPlanDetail> productionPlanDetails;
+    private List<ProductionPlanDetail> productionPlanDetails = new ArrayList<>();
 
     @JsonManagedReference
     @OneToMany(mappedBy = "plan")
     private List<LogBatch> logBatches;
+
+    // Helper method for bidirectional relationship
+    public void addProductionPlanDetail(ProductionPlanDetail detail) {
+        productionPlanDetails.add(detail);
+        detail.setProductionPlan(this);
+    }
+
+    public void removeProductionPlanDetail(ProductionPlanDetail detail) {
+        productionPlanDetails.remove(detail);
+        detail.setProductionPlan(null);
+    }
 }
