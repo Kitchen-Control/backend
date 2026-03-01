@@ -63,6 +63,9 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
                 detail.setNote(detailRequest.getNote());
                 detail.setProductionPlan(plan);
 
+                // *** SỬ DỤNG HELPER METHOD TẠI ĐÂY ***
+                /* plan.addProductionPlanDetail(detail); */
+
                 productionPlanDetails.add(detail);
             }
         }

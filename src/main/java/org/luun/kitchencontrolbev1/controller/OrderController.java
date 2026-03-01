@@ -37,9 +37,9 @@ public class OrderController {
         return orderService.createOrder(request);
     }
 
-    @PatchMapping("/update-status")
+    @PatchMapping("/update-status/{storeId}")
     @Operation(summary = "Update order status")
-    public OrderResponse updateOrderStatus(@RequestParam Integer orderId, @RequestParam OrderStatus status) {
+    public OrderResponse updateOrderStatus(@RequestParam Integer orderId, @RequestParam("status") OrderStatus status) {
         return orderService.updateOrderStatus(orderId, status);
     }
 }
