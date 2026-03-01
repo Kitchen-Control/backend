@@ -42,4 +42,10 @@ public class OrderController {
     public OrderResponse updateOrderStatus(@RequestParam Integer orderId, @RequestParam OrderStatus status) {
         return orderService.updateOrderStatus(orderId, status);
     }
+
+    @GetMapping("/waiting")
+    @Operation(summary = "Get all waiting order")
+    public List<OrderResponse> getWaitingOrders() {
+        return orderService.getWaitingOrder();
+    }
 }

@@ -87,6 +87,15 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(savedOrder);
     }
 
+    //Get all waiting orders
+    @Override
+    public List<OrderResponse> getWaitingOrder() {
+        List<Order> orders = orderRepository.findByStatus(OrderStatus.WAITTING);
+        return orders.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public OrderResponse updateOrderStatus(Integer orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)

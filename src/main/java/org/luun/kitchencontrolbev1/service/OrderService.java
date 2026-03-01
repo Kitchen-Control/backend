@@ -10,4 +10,5 @@ public interface OrderService {
     List<OrderResponse> getOrdersByStoreId(Integer storeId);
     OrderResponse createOrder(OrderRequest request);
     OrderResponse updateOrderStatus(Integer orderId, OrderStatus status);
+    List<OrderResponse> getWaitingOrder();
 }

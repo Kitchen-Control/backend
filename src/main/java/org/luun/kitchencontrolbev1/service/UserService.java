@@ -11,4 +11,5 @@ public interface UserService {
     UserResponse createUser(UserRequest request);
     UserResponse updateUser(Integer userId, UserRequest request);
     void deleteUser(Integer userId);
+    List<UserResponse> getAllShippers();
 }

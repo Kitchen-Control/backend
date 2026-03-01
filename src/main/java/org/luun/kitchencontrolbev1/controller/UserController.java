@@ -47,4 +47,10 @@ public class UserController {
     public void deleteUser(@PathVariable Integer userId) {
         userService.deleteUser(userId);
     }
+
+    @GetMapping("/shippers")
+    @Operation(summary = "Get all shipper")
+    public List<UserResponse> getAllShippers() {
+        return userService.getAllShippers();
+    }
 }

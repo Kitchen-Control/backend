@@ -106,21 +106,29 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
+    @Override
+    public List<UserResponse> getAllShippers() {
+        List<User> shippers = userRepository.findByRoleRoleName("SHIPPER");
+        return shippers.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     private UserResponse mapToResponse(User user) {
         UserResponse response = new UserResponse();
         response.setUserId(user.getUserId());
         response.setUsername(user.getUsername());
         response.setFullName(user.getFullName());
-        
+
         if (user.getRole() != null) {
             response.setRoleName(user.getRole().getRoleName());
         }
-        
+
         if (user.getStore() != null) {
             response.setStoreId(user.getStore().getStoreId());
             response.setStoreName(user.getStore().getStoreName());
         }
-        
+
         return response;
     }
 }
