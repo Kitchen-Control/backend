@@ -41,7 +41,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderResponse> getOrdersByStoreId(Integer storeId) {
-        List<Order> orders = orderRepository.findByStoreStoreId(storeId);
+        List<Order> orders = orderRepository.findByStore_StoreId(storeId);
+        if(orders == null) {
+            throw new RuntimeException("Orders not found with store id: " + storeId);
+        }
         return orders.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
