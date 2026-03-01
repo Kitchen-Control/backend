@@ -108,7 +108,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> getAllShippers() {
-        List<User> shippers = userRepository.findByRoleRoleName("SHIPPER");
+        List<User> shippers = userRepository.findByRole_RoleName("SHIPPER");
         return shippers.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

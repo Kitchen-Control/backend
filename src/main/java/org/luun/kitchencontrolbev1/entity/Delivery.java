@@ -31,6 +31,6 @@ public class Delivery {
     private LocalDateTime createdAt;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "delivery")
+    @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL)
     private List<Order> orders;
 }
