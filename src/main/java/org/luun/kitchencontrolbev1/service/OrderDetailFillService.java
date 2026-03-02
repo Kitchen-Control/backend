@@ -11,4 +11,6 @@ public interface OrderDetailFillService {
     List<OrderDetailFillResponse> getOrderDetailFillsByOrderDetailId(Integer orderDetailId);
 
     List<OrderDetailFillResponse> getOrderDetailFillsByBatchId(Integer batchId);
+
+    void autoAllocateFEFO(Integer orderId);
 }

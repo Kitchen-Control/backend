@@ -42,7 +42,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderResponse> getOrdersByStoreId(Integer storeId) {
         List<Order> orders = orderRepository.findByStore_StoreId(storeId);
-        if(orders == null) {
+        if (orders == null) {
             throw new RuntimeException("Orders not found with store id: " + storeId);
         }
         return orders.stream()
@@ -50,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
-    //Creating orders method
+    // Creating orders method
     @Override
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
@@ -70,13 +70,14 @@ public class OrderServiceImpl implements OrderService {
         if (request.getOrderDetails() != null) {
             for (OrderDetailRequest detailRequest : request.getOrderDetails()) {
                 Product product = productRepository.findById(detailRequest.getProductId())
-                        .orElseThrow(() -> new RuntimeException("Product not found with id: " + detailRequest.getProductId()));
+                        .orElseThrow(() -> new RuntimeException(
+                                "Product not found with id: " + detailRequest.getProductId()));
 
                 OrderDetail detail = new OrderDetail();
                 detail.setProduct(product);
                 detail.setQuantity(detailRequest.getQuantity());
                 detail.setOrder(order); // Set the parent Order for the detail
-                
+
                 orderDetails.add(detail);
             }
         }
@@ -90,7 +91,7 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(savedOrder);
     }
 
-    //Get all waiting orders
+    // Get all waiting orders
     @Override
     public List<OrderResponse> getWaitingOrder() {
         List<Order> orders = orderRepository.findByStatus(OrderStatus.WAITTING);
@@ -108,15 +109,30 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(updatedOrder);
     }
 
+    @Override
+    @Transactional
+    // Bước 5: Nhận hàng (Completion) - Shipper bấm xác nhận hoàn thành
+    public OrderResponse completeOrder(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        if (order.getStatus() != OrderStatus.DELIVERING) {
+            throw new RuntimeException("Can only complete an order that is currently DELIVERING");
+        }
+
+        order.setStatus(OrderStatus.DONE);
+        return mapToResponse(orderRepository.save(order));
+    }
+
     private OrderResponse mapToResponse(Order order) {
         OrderResponse response = new OrderResponse();
         response.setOrderId(order.getOrderId());
-        
+
         // Delivery info
         if (order.getDelivery() != null) {
             response.setDeliveryId(order.getDelivery().getDeliveryId());
         }
-        
+
         // Store info
         if (order.getStore() != null) {
             response.setStoreId(order.getStore().getStoreId());
@@ -127,7 +143,7 @@ public class OrderServiceImpl implements OrderService {
         response.setStatus(order.getStatus());
         response.setImg(order.getImg());
         response.setComment(order.getComment());
-        
+
         // Map details
         if (order.getOrderDetails() != null) {
             List<OrderDetailResponse> details = order.getOrderDetails().stream()
@@ -135,26 +151,26 @@ public class OrderServiceImpl implements OrderService {
                     .collect(Collectors.toList());
             response.setOrderDetails(details);
         }
-        
+
         // Map feedback
         if (order.getQualityFeedback() != null) {
             response.setFeedbackId(order.getQualityFeedback().getFeedbackId());
             response.setFeedbackRating(order.getQualityFeedback().getRating());
             response.setFeedbackComment(order.getQualityFeedback().getComment());
         }
-        
+
         return response;
     }
 
     private OrderDetailResponse mapToDetailResponse(OrderDetail detail) {
         OrderDetailResponse response = new OrderDetailResponse();
         response.setOrderDetailId(detail.getOrderDetailId());
-        
+
         if (detail.getProduct() != null) {
             response.setProductId(detail.getProduct().getProductId());
             response.setProductName(detail.getProduct().getProductName());
         }
-        
+
         response.setQuantity(detail.getQuantity());
         return response;
     }

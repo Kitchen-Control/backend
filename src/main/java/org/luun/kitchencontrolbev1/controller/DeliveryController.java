@@ -30,19 +30,23 @@ public class DeliveryController {
         return deliveryService.getDeliveriesByShipperId(shipperId);
     }
 
-//    @PatchMapping("/{deliveryId}/assign-shipper/{shipperId}")
-//    @Operation(summary = "Assign a shipper to a delivery")
-//    public DeliveryResponse assignShipperToDelivery(
-//            @PathVariable Integer deliveryId,
-//            @PathVariable Integer shipperId) {
-//        return deliveryService.assignShipperToDelivery(deliveryId, shipperId);
-//    }
+    // @PatchMapping("/{deliveryId}/assign-shipper/{shipperId}")
+    // @Operation(summary = "Assign a shipper to a delivery")
+    // public DeliveryResponse assignShipperToDelivery(
+    // @PathVariable Integer deliveryId,
+    // @PathVariable Integer shipperId) {
+    // return deliveryService.assignShipperToDelivery(deliveryId, shipperId);
+    // }
 
     @PostMapping("/create")
     @Operation(summary = "Create delivery and assign orders, shipper to it")
     public DeliveryResponse createDelivery(@RequestBody AssignShipperRequest assignShipperRequest) {
-        return deliveryService.assignShipperToDelivery(
-                assignShipperRequest.getOrderIds()
-                , assignShipperRequest.getShipperId());
+        return deliveryService.assignShipperToDelivery(assignShipperRequest);
+    }
+
+    @PatchMapping("/{deliveryId}/start")
+    @Operation(summary = "Shipper starts the delivery trip -> Orders status becomes DELIVERING")
+    public DeliveryResponse startDelivery(@PathVariable Integer deliveryId) {
+        return deliveryService.startDelivery(deliveryId);
     }
 }

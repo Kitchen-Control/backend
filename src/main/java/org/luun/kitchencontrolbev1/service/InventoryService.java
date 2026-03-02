@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface InventoryService {
     List<InventoryResponse> getInventories();
+
     InventoryResponse getInventoryById(Integer inventoryId);
+
+    Float getAvailableStock(Integer productId);
 }

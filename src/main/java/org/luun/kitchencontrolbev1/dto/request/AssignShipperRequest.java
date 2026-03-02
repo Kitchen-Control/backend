@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @AllArgsConstructor
@@ -14,4 +15,5 @@ import java.util.List;
 public class AssignShipperRequest {
     private Integer shipperId;
     private List<Integer> orderIds;
+    private LocalDate deliveryDate;
 }

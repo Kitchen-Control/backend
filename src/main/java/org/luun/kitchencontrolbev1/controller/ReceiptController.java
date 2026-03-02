@@ -22,4 +22,18 @@ public class ReceiptController {
     public List<ReceiptResponse> getByOrderId(@PathVariable Integer orderId) {
         return receiptService.getByOrderId(orderId);
     }
+
+    @PostMapping("/order/{orderId}")
+    @Operation(summary = "Create a draft receipt for an order")
+    public ReceiptResponse createReceipt(
+            @PathVariable Integer orderId,
+            @RequestParam(required = false) String note) {
+        return receiptService.createReceipt(orderId, note);
+    }
+
+    @PatchMapping("/{receiptId}/confirm")
+    @Operation(summary = "Confirm export and deduct physical inventory")
+    public ReceiptResponse confirmReceipt(@PathVariable Integer receiptId) {
+        return receiptService.confirmReceipt(receiptId);
+    }
 }

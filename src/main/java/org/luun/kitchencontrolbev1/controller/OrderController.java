@@ -48,4 +48,10 @@ public class OrderController {
     public List<OrderResponse> getWaitingOrders() {
         return orderService.getWaitingOrder();
     }
+
+    @PatchMapping("/{orderId}/complete")
+    @Operation(summary = "Complete the order (mark as DONE)")
+    public OrderResponse completeOrder(@PathVariable Integer orderId) {
+        return orderService.completeOrder(orderId);
+    }
 }
