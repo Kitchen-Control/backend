@@ -15,6 +15,9 @@ public interface OrderDetailFillRepository extends JpaRepository<OrderDetailFill
 
         List<OrderDetailFill> findByOrderDetail_Order_OrderId(Integer orderId);
 
+
+        // This query calculates the total reserved quantity for a specific batch ID,
+        // considering only orders with specified statuses.
         @Query("SELECT COALESCE(SUM(odf.quantity), 0) FROM OrderDetailFill odf " +
                         "JOIN odf.orderDetail od " +
                         "JOIN od.order o " +

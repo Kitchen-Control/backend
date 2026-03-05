@@ -56,7 +56,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         Receipt receipt = new Receipt();
         // Generate a random internal code, easily trackable
-        receipt.setReceiptCode("REC-" + System.currentTimeMillis());
+        receipt.setReceiptCode("REC-" + System.currentTimeMillis()); //Code is generated base on current time
         receipt.setOrder(order);
         receipt.setStatus(ReceiptStatus.DRAFT);
         receipt.setNote(note);
@@ -71,7 +71,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Transactional
     // Giai đoạn 3.3: Xác nhận Xuất kho (Dispatched)
     // Thủ kho bấm hoàn tất -> Cập nhật Phiếu -> Trừ thẳng kho
-    public ReceiptResponse confirmReceipt(Integer receiptId) {
+    public ReceiptResponse confirmReceipt(Integer receiptId) { //Cofirm là chuyển trạng thái của receipt từ DRAFT thành COMPLETED
         Receipt receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
 
@@ -109,7 +109,7 @@ public class ReceiptServiceImpl implements ReceiptService {
             transaction.setProduct(fill.getOrderDetail().getProduct());
             transaction.setBatch(fill.getBatch());
             transaction.setType(InventoryTransactionType.EXPORT);
-            transaction.setQuantity(fill.getQuantity()); // Số lượng xuất
+            transaction.setQuantity(fill.getQuantity()); //Số lượng xuất
             transaction.setReceipt(receipt);
             transaction.setCreatedAt(LocalDateTime.now());
             transaction.setNote("Exported via Receipt: " + receipt.getReceiptCode());

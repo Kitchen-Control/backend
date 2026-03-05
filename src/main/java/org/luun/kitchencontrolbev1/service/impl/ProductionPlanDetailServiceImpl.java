@@ -26,16 +26,12 @@ public class ProductionPlanDetailServiceImpl implements ProductionPlanDetailServ
 
     private ProductionPlanDetailResponse mapToResponse(ProductionPlanDetail detail) {
         ProductionPlanDetailResponse response = new ProductionPlanDetailResponse();
-        response.setPlanDetailId(detail.getPlanDetailId());
-
-        if (detail.getProduct() != null) {
-            response.setProductId(detail.getProduct().getProductId());
-            response.setProductName(detail.getProduct().getProductName());
-        }
-
-        response.setQuantity(detail.getQuantity());
-        response.setNote(detail.getNote());
-
-        return response;
+        return response.builder()
+                .planDetailId(detail.getPlanDetailId())
+                .productId(detail.getProduct() != null ? detail.getProduct().getProductId() : null)
+                .productName(detail.getProduct() != null ? detail.getProduct().getProductName() : null)
+                .quantity(detail.getQuantity())
+                .note(detail.getNote())
+                .build();
     }
 }

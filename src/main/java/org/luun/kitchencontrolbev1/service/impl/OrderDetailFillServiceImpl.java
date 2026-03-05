@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class OrderDetailFillServiceImpl implements OrderDetailFillService {
+public class  OrderDetailFillServiceImpl implements OrderDetailFillService {
 
     private final OrderDetailFillRepository orderDetailFillRepository;
     private final OrderRepository orderRepository;
@@ -65,6 +65,7 @@ public class OrderDetailFillServiceImpl implements OrderDetailFillService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
+        //Kiểm tra nếu đơn hàng này không có chi tiết nào thì không cần làm gì cả, thoát luôn khỏi hàm
         if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
             return;
         }
@@ -93,8 +94,7 @@ public class OrderDetailFillServiceImpl implements OrderDetailFillService {
 
                 Integer batchId = inv.getBatch().getBatchId();
 
-                // Tính xem Lô này đã bị "giữ chỗ" bao nhiêu hàng cho các Order đang chờ/xử lý
-                // khác
+                // Tính xem Lô này đã bị "giữ chỗ" bao nhiêu hàng cho các Order đang chờ/xử lý khác
                 Float reserved = orderDetailFillRepository.getTotalReservedQuantityByBatchId(batchId, statuses);
                 if (reserved == null)
                     reserved = 0f;

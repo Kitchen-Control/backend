@@ -17,4 +17,8 @@ public interface OrderService {
     List<OrderResponse> getWaitingOrder();
 
     OrderResponse completeOrder(Integer orderId);
+
+    List<OrderResponse> getOrdersByStatus(OrderStatus orderStatus);
+
+    List<OrderResponse> getOrdersByShipperId(Integer shipperId);
 }
