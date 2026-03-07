@@ -1,6 +1,7 @@
 package org.luun.kitchencontrolbev1.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.response.InventoryTransactionResponse;
 import org.luun.kitchencontrolbev1.dto.response.ReceiptResponse;
 import org.luun.kitchencontrolbev1.entity.Receipt;
 import org.luun.kitchencontrolbev1.entity.Order;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,7 +87,7 @@ public class ReceiptServiceImpl implements ReceiptService {
             // 1. Chuyển trạng thái Phiếu sang COMPLETED
             receipt.setStatus(ReceiptStatus.COMPLETED);
             receipt.setExportDate(LocalDateTime.now());
-
+            
             // Cập nhật trạng thái order sang DISPATCHED
             Order order = receipt.getOrder();
             order.setStatus(OrderStatus.DISPATCHED);
@@ -139,6 +141,28 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setStatus(receipt.getStatus());
         response.setNote(receipt.getNote());
 
+        if (receipt.getInventoryTransactions() != null) {
+            List<InventoryTransactionResponse> transactionResponses = receipt.getInventoryTransactions().stream()
+                    .map(this::mapTransactionToResponse)
+                    .collect(Collectors.toList());
+            response.setInventoryTransactions(transactionResponses);
+        } else {
+            response.setInventoryTransactions(new ArrayList<>());
+        }
+
         return response;
+    }
+
+    private InventoryTransactionResponse mapTransactionToResponse(InventoryTransaction transaction) {
+        return InventoryTransactionResponse.builder()
+                .transactionId(transaction.getTransactionId())
+                .productId(transaction.getProduct() != null ? transaction.getProduct().getProductId() : null)
+                .productName(transaction.getProduct() != null ? transaction.getProduct().getProductName() : null)
+                .batchId(transaction.getBatch() != null ? transaction.getBatch().getBatchId() : null)
+                .type(transaction.getType())
+                .quantity(transaction.getQuantity())
+                .createdAt(transaction.getCreatedAt())
+                .note(transaction.getNote())
+                .build();
     }
 }
