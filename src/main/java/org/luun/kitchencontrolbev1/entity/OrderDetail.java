@@ -31,6 +31,6 @@ public class OrderDetail {
     private Float quantity;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "orderDetail")
+    @OneToMany(mappedBy = "orderDetail", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetailFill> orderDetailFills;
 }

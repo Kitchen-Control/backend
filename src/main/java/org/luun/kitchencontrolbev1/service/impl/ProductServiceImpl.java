@@ -7,6 +7,7 @@ import org.luun.kitchencontrolbev1.entity.Product;
 import org.luun.kitchencontrolbev1.enums.ProductType;
 import org.luun.kitchencontrolbev1.repository.ProductRepository;
 import org.luun.kitchencontrolbev1.service.ProductService;
+import org.luun.kitchencontrolbev1.service.InventoryService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
+    private final InventoryService inventoryService;
 
     @Override
     public List<ProductResponse> getProducts() {
@@ -27,13 +29,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductResponse> getProductByType(String productType) {
-        // Assuming findByProductType exists in repository or needs to be added
-        // For now, let's assume it returns a single Product or null
-        // If it returns a List, this logic needs adjustment
-        List<Product> products = productRepository.findByProductType(productType);
-         return products.stream()
-                 .map(this::mapToResponse)
-                 .collect(Collectors.toList());
+        // Convert the incoming String to the ProductType enum
+        ProductType type;
+        try {
+            type = ProductType.valueOf(productType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // Handle cases where the string is not a valid enum constant
+            throw new RuntimeException("Invalid product type: " + productType);
+        }
+
+        List<Product> products = productRepository.findByProductType(type);
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -43,7 +51,7 @@ public class ProductServiceImpl implements ProductService {
         product.setProductType(ProductType.valueOf(request.getProductType()));
         product.setUnit(request.getUnit());
         product.setShelfLifeDays(request.getShelfLifeDay());
-        
+
         Product savedProduct = productRepository.save(product);
         return mapToResponse(savedProduct);
     }
@@ -52,12 +60,12 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateProduct(Integer productId, Product updatedProduct) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id " + productId));
-        
+
         product.setProductName(updatedProduct.getProductName());
         product.setProductType(updatedProduct.getProductType());
         product.setUnit(updatedProduct.getUnit());
         product.setShelfLifeDays(updatedProduct.getShelfLifeDays());
-        
+
         Product savedProduct = productRepository.save(product);
         return mapToResponse(savedProduct);
     }
@@ -75,7 +83,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductResponse mapToResponse(Product product) {
-        if (product == null) return null;
+        if (product == null)
+            return null;
         ProductResponse response = new ProductResponse();
         response.setProductId(product.getProductId());
         response.setProductName(product.getProductName());
@@ -85,6 +94,9 @@ public class ProductServiceImpl implements ProductService {
         }
         response.setUnit(product.getUnit());
         response.setShelfLifeDays(product.getShelfLifeDays());
+
+        response.setAvailableStock(inventoryService.getAvailableStock(product.getProductId()));
+
         return response;
     }
 }

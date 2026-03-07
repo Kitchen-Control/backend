@@ -3,6 +3,7 @@ package org.luun.kitchencontrolbev1.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.weaver.ast.Or;
 import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
@@ -31,15 +32,39 @@ public class OrderController {
         return orderService.getOrdersByStoreId(storeId);
     }
 
+    @GetMapping("/filter-by-status")
+    @Operation(summary = "Get orders by status", description = "Get orders by status (WAITTING, PROCESSING, DELIVERING, DONE, DAMAGED, CANCLED)")
+    public List<OrderResponse> getOrdersByStatus(@RequestParam OrderStatus status) {
+        return orderService.getOrdersByStatus(status);
+    }
+
+    @GetMapping("/get-by-shipper/{shipperId}")
+    @Operation(summary = "Get orders by shipper ID")
+    public List<OrderResponse> getOrdersByShipperId(@PathVariable Integer shipperId) {
+        return orderService.getOrdersByShipperId(shipperId);
+    }
+
     @PostMapping
     @Operation(summary = "Create a new order")
     public OrderResponse createOrder(@RequestBody OrderRequest request) {
         return orderService.createOrder(request);
     }
 
-    @PatchMapping("/update-status")
+    @PatchMapping("/update-status/{storeId}")
     @Operation(summary = "Update order status")
-    public OrderResponse updateOrderStatus(@RequestParam Integer orderId, @RequestParam OrderStatus status) {
+    public OrderResponse updateOrderStatus(@RequestParam Integer orderId, @RequestParam("status") OrderStatus status) {
         return orderService.updateOrderStatus(orderId, status);
+    }
+
+    @GetMapping("/waiting")
+    @Operation(summary = "Get all waiting order")
+    public List<OrderResponse> getWaitingOrders() {
+        return orderService.getWaitingOrder();
+    }
+
+    @PatchMapping("/{orderId}/complete")
+    @Operation(summary = "Complete the order (mark as DONE)")
+    public OrderResponse completeOrder(@PathVariable Integer orderId) {
+        return orderService.completeOrder(orderId);
     }
 }

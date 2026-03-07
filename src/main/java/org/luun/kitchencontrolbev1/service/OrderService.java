@@ -7,7 +7,18 @@ import java.util.List;
 
 public interface OrderService {
     List<OrderResponse> getOrders();
+
     List<OrderResponse> getOrdersByStoreId(Integer storeId);
+
     OrderResponse createOrder(OrderRequest request);
+
     OrderResponse updateOrderStatus(Integer orderId, OrderStatus status);
+
+    List<OrderResponse> getWaitingOrder();
+
+    OrderResponse completeOrder(Integer orderId);
+
+    List<OrderResponse> getOrdersByStatus(OrderStatus orderStatus);
+
+    List<OrderResponse> getOrdersByShipperId(Integer shipperId);
 }

@@ -98,6 +98,7 @@ public class InventoryTransactionServiceImpl implements InventoryTransactionServ
         Inventory inventory = inventoryRepository.findByBatchBatchId(batch.getBatchId())
                 .orElse(null);
 
+        //Checking this product existed in inventory or not
         if (inventory == null) {
             if (type == InventoryTransactionType.EXPORT) {
                 throw new RuntimeException("Cannot export from non-existent inventory");

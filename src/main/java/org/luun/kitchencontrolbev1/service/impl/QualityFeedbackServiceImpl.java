@@ -42,10 +42,9 @@ public class QualityFeedbackServiceImpl implements QualityFeedbackService {
             throw new RuntimeException("Feedback already exists for this order");
         }
 
-        // 3. Check if order is completed (Optional business rule)
+        // 3. Check if order is completed (Optional business rule) - Bước 5: Đánh giá
         if (order.getStatus() != OrderStatus.DONE) {
-             throw new RuntimeException("Cannot give feedback for incomplete orders");
-             // Uncomment above line if you want to restrict feedback to DONE orders only
+            throw new RuntimeException("Cannot give feedback for incomplete orders");
         }
 
         // 4. Create Feedback
@@ -62,16 +61,15 @@ public class QualityFeedbackServiceImpl implements QualityFeedbackService {
     private QualityFeedbackResponse mapToResponse(QualityFeedback feedback) {
         QualityFeedbackResponse response = new QualityFeedbackResponse();
         response.setFeedbackId(feedback.getFeedbackId());
-        
+
         if (feedback.getOrder() != null) {
             response.setOrderId(feedback.getOrder().getOrderId());
         }
 
-        
         response.setRating(feedback.getRating());
         response.setComment(feedback.getComment());
         response.setCreatedAt(feedback.getCreatedAt());
-        
+
         return response;
     }
 }
