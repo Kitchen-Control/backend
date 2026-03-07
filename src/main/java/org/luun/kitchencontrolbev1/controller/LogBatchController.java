@@ -43,10 +43,22 @@ public class LogBatchController {
         return logBatchService.getLogBatchesByProductId(productId);
     }
 
+    @GetMapping("/status/{status}")
+    @Operation(summary = "Get all log batches by Status")
+    public List<LogBatchResponse> getLogBatchesByStatus(@PathVariable LogBatchStatus status) {
+        return logBatchService.getLogBatchesByStatus(status);
+    }
+
     @PostMapping
     @Operation(summary = "Create a new log batch (Production)")
-    public LogBatchResponse createLogBatch(@RequestBody LogBatchRequest request) {
-        return logBatchService.createLogBatch(request);
+    public LogBatchResponse createLogProBatch(@RequestBody LogBatchRequest request) {
+        return logBatchService.createProductionLogBatch(request);
+    }
+
+    @PostMapping
+    @Operation(summary = "Create a new log batch (Purchase)")
+    public LogBatchResponse createPurLogBatch(@RequestBody LogBatchRequest request) {
+        return logBatchService.createPurchaseLogBatch(request);
     }
 
     @PatchMapping("/{batchId}/status")

@@ -87,7 +87,7 @@ public class ReceiptServiceImpl implements ReceiptService {
             // 1. Chuyển trạng thái Phiếu sang COMPLETED
             receipt.setStatus(ReceiptStatus.COMPLETED);
             receipt.setExportDate(LocalDateTime.now());
-            
+
             // Cập nhật trạng thái order sang DISPATCHED
             Order order = receipt.getOrder();
             order.setStatus(OrderStatus.DISPATCHED);

@@ -15,7 +15,11 @@ public interface LogBatchService {
 
     List<LogBatchResponse> getLogBatchesByProductId(Integer productId);
 
-    LogBatchResponse createLogBatch(LogBatchRequest request);
+    List<LogBatchResponse> getLogBatchesByStatus(LogBatchStatus status);
+
+    LogBatchResponse createProductionLogBatch(LogBatchRequest request);
+
+    LogBatchResponse createPurchaseLogBatch(LogBatchRequest request);
 
     LogBatchResponse updateLogBatchStatus(Integer batchId, LogBatchStatus status);
 }
