@@ -9,5 +9,5 @@ public interface ReceiptService {
 
     ReceiptResponse createReceipt(Integer orderId, String note);
 
-    ReceiptResponse confirmReceipt(Integer receiptId);
+    void confirmReceipt(List<Integer> receiptId);
 }

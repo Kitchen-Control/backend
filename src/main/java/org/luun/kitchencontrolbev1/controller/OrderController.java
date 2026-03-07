@@ -56,12 +56,6 @@ public class OrderController {
         return orderService.updateOrderStatus(orderId, status);
     }
 
-    @GetMapping("/waiting")
-    @Operation(summary = "Get all waiting order")
-    public List<OrderResponse> getWaitingOrders() {
-        return orderService.getWaitingOrder();
-    }
-
     @PatchMapping("/{orderId}/complete")
     @Operation(summary = "Complete the order (mark as DONE)")
     public OrderResponse completeOrder(@PathVariable Integer orderId) {

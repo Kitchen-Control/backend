@@ -1,6 +1,7 @@
 package org.luun.kitchencontrolbev1.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.response.InventoryTransactionResponse;
 import org.luun.kitchencontrolbev1.dto.response.ReceiptResponse;
 import org.luun.kitchencontrolbev1.entity.Receipt;
 import org.luun.kitchencontrolbev1.entity.Order;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,13 +52,13 @@ public class ReceiptServiceImpl implements ReceiptService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
-        if (order.getStatus() != OrderStatus.PROCESSING && order.getStatus() != OrderStatus.DONE) {
-            throw new RuntimeException("Order is not in a valid state to create a receipt");
+        if (order.getStatus() != OrderStatus.PROCESSING) {
+            throw new RuntimeException("Order status need to be PROCESSING");
         }
 
         Receipt receipt = new Receipt();
         // Generate a random internal code, easily trackable
-        receipt.setReceiptCode("REC-" + System.currentTimeMillis()); //Code is generated base on current time
+        receipt.setReceiptCode("REC-" + System.currentTimeMillis());
         receipt.setOrder(order);
         receipt.setStatus(ReceiptStatus.DRAFT);
         receipt.setNote(note);
@@ -71,53 +73,54 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Transactional
     // Giai đoạn 3.3: Xác nhận Xuất kho (Dispatched)
     // Thủ kho bấm hoàn tất -> Cập nhật Phiếu -> Trừ thẳng kho
-    public ReceiptResponse confirmReceipt(Integer receiptId) { //Cofirm là chuyển trạng thái của receipt từ DRAFT thành COMPLETED
-        Receipt receipt = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
-
-        if (receipt.getStatus() != ReceiptStatus.DRAFT) {
-            throw new RuntimeException("Can only confirm a DRAFT receipt");
+    public void confirmReceipt(List<Integer> receiptId) { //Cofirm là chuyển trạng thái của receipt từ DRAFT thành COMPLETED
+        List<Receipt> receipts = receiptRepository.findAllById(receiptId);
+        if (receipts.isEmpty()) {
+            throw new RuntimeException("There is a receiptId which can not found");
         }
 
-        // 1. Chuyển trạng thái Phiếu sang COMPLETED
-        receipt.setStatus(ReceiptStatus.COMPLETED);
-        receipt.setExportDate(LocalDateTime.now());
-
-        // 2. Lấy ra danh sách các Lô hàng đã bị "giữ chỗ" lúc nãy cho Đơn hàng này
-        List<OrderDetailFill> fills = orderDetailFillRepository
-                .findByOrderDetail_Order_OrderId(receipt.getOrder().getOrderId());
-
-        // 3. Với từng cục hàng đã nhặt, tiến hành trừ kho thực tế và Lưu Log Lịch sử
-        // (Transaction)
-        for (OrderDetailFill fill : fills) {
-            // Lấy Lô hàng thực trong database
-            Inventory inv = inventoryRepository.findByBatchBatchId(fill.getBatch().getBatchId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Inventory not found for batch: " + fill.getBatch().getBatchId()));
-
-            // Trừ lượng hàng đã giữ chỗ (do bây giờ Xuất thật sự rồi)
-            Float newQuantity = inv.getQuantity() - fill.getQuantity();
-            if (newQuantity < 0) {
-                throw new RuntimeException("Not enough physical inventory to export for product: "
-                        + fill.getOrderDetail().getProduct().getProductName());
+        for (Receipt receipt : receipts) {
+            if (receipt.getStatus() != ReceiptStatus.DRAFT) {
+                throw new RuntimeException("Can only confirm a DRAFT receipt");
             }
-            inv.setQuantity(newQuantity);
-            inventoryRepository.save(inv);
 
-            // Tạo Transaction Lịch sử Rút hàng (EXPORT)
-            InventoryTransaction transaction = new InventoryTransaction();
-            transaction.setProduct(fill.getOrderDetail().getProduct());
-            transaction.setBatch(fill.getBatch());
-            transaction.setType(InventoryTransactionType.EXPORT);
-            transaction.setQuantity(fill.getQuantity()); //Số lượng xuất
-            transaction.setReceipt(receipt);
-            transaction.setCreatedAt(LocalDateTime.now());
-            transaction.setNote("Exported via Receipt: " + receipt.getReceiptCode());
+            // 1. Chuyển trạng thái Phiếu sang COMPLETED
+            receipt.setStatus(ReceiptStatus.COMPLETED);
+            receipt.setExportDate(LocalDateTime.now());
 
-            inventoryTransactionRepository.save(transaction);
+            // 2. Lấy ra danh sách các Lô hàng đã bị "giữ chỗ" lúc nãy cho Đơn hàng này
+            // Lưu ý: Cần lấy OrderDetailFill dựa trên Order của Receipt
+            List<OrderDetailFill> fills = orderDetailFillRepository
+                    .findByOrderDetail_Order_OrderId(receipt.getOrder().getOrderId());
+
+            // 3. Với từng cục hàng đã nhặt, tiến hành trừ kho thực tế và Lưu Log Lịch sử (Transaction)
+            for (OrderDetailFill fill : fills) {
+                // Lấy Lô hàng thực trong database (Inventory)
+                Inventory inv = inventoryRepository.findByBatchBatchId(fill.getBatch().getBatchId())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Inventory not found for batch: " + fill.getBatch().getBatchId()));
+
+                // Trừ lượng hàng đã giữ chỗ
+                Float currentQuantity = inv.getQuantity();
+                Float quantityToExport = fill.getQuantity();
+
+                inv.setQuantity(currentQuantity - quantityToExport);
+                inventoryRepository.save(inv);
+
+                // Tạo Transaction Lịch sử Rút hàng (EXPORT)
+                InventoryTransaction transaction = new InventoryTransaction();
+                transaction.setProduct(fill.getOrderDetail().getProduct());
+                transaction.setBatch(fill.getBatch());
+                transaction.setType(InventoryTransactionType.EXPORT);
+                transaction.setQuantity(quantityToExport); //Số lượng xuất
+                transaction.setReceipt(receipt);
+                transaction.setCreatedAt(LocalDateTime.now());
+                transaction.setNote("Exported via Receipt: " + receipt.getReceiptCode());
+
+                inventoryTransactionRepository.save(transaction);
+            }
+            receiptRepository.save(receipt);
         }
-
-        return mapToResponse(receiptRepository.save(receipt));
     }
 
     private ReceiptResponse mapToResponse(Receipt receipt) {
@@ -133,6 +136,28 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setStatus(receipt.getStatus());
         response.setNote(receipt.getNote());
 
+        if (receipt.getInventoryTransactions() != null) {
+            List<InventoryTransactionResponse> transactionResponses = receipt.getInventoryTransactions().stream()
+                    .map(this::mapTransactionToResponse)
+                    .collect(Collectors.toList());
+            response.setInventoryTransactions(transactionResponses);
+        } else {
+            response.setInventoryTransactions(new ArrayList<>());
+        }
+
         return response;
+    }
+
+    private InventoryTransactionResponse mapTransactionToResponse(InventoryTransaction transaction) {
+        return InventoryTransactionResponse.builder()
+                .transactionId(transaction.getTransactionId())
+                .productId(transaction.getProduct() != null ? transaction.getProduct().getProductId() : null)
+                .productName(transaction.getProduct() != null ? transaction.getProduct().getProductName() : null)
+                .batchId(transaction.getBatch() != null ? transaction.getBatch().getBatchId() : null)
+                .type(transaction.getType())
+                .quantity(transaction.getQuantity())
+                .createdAt(transaction.getCreatedAt())
+                .note(transaction.getNote())
+                .build();
     }
 }

@@ -116,27 +116,6 @@ public class DeliveryServiceImpl implements DeliveryService {
         return mapToResponse(deliveryRepository.save(delivery));
     }
 
-    // @Override
-    // public DeliveryResponse assignShipperToDelivery(Integer deliveryId, Integer
-    // shipperId) {
-    // Delivery delivery = deliveryRepository.findById(deliveryId)
-    // .orElseThrow(() -> new RuntimeException("Delivery not found with id: " +
-    // deliveryId));
-    //
-    // User shipper = userRepository.findById(shipperId)
-    // .orElseThrow(() -> new RuntimeException("Shipper not found with id: " +
-    // shipperId));
-    //
-    // // You might want to check if the user is actually a shipper here
-    // if (!shipper.getRole().equals("Shipper")) {
-    // throw new RuntimeException("User is not a shipper");
-    // }
-    // delivery.setShipper(shipper);
-    // Delivery updatedDelivery = deliveryRepository.save(delivery);
-    //
-    // return mapToResponse(updatedDelivery);
-    // }
-
     private DeliveryResponse mapToResponse(Delivery delivery) {
         DeliveryResponse response = new DeliveryResponse();
         response.setDeliveryId(delivery.getDeliveryId());

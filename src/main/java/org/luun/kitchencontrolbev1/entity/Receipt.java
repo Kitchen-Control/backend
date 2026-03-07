@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.mapping.ToOne;
 import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 
 import java.time.LocalDateTime;
@@ -24,7 +25,7 @@ public class Receipt {
     private String receiptCode;
 
     @JsonBackReference
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "order_id")
     private Order order;
 

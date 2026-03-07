@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -20,4 +21,5 @@ public class ReceiptResponse {
     LocalDateTime exportDate;
     ReceiptStatus status;
     String note;
+    List<InventoryTransactionResponse> inventoryTransactions;
 }
