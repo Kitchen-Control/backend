@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.luun.kitchencontrolbev1.entity.OrderDetailFill;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -15,4 +18,5 @@ public class OrderDetailResponse {
     Integer productId;
     String productName;
     Float quantity;
+    List<OrderDetailFillResponse> orderDetailFills;
 }

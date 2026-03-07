@@ -3,6 +3,7 @@ package org.luun.kitchencontrolbev1.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.dto.request.OrderDetailRequest;
 import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
+import org.luun.kitchencontrolbev1.dto.response.OrderDetailFillResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderDetailResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.entity.*;
@@ -85,15 +86,6 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
 
         return mapToResponse(savedOrder);
-    }
-
-    // Get all waiting orders
-    @Override
-    public List<OrderResponse> getWaitingOrder() {
-        List<Order> orders = orderRepository.findByStatus(OrderStatus.WAITTING);
-        return orders.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -184,12 +176,38 @@ public class OrderServiceImpl implements OrderService {
         OrderDetailResponse response = new OrderDetailResponse();
         response.setOrderDetailId(detail.getOrderDetailId());
 
+        // Map Product info
         if (detail.getProduct() != null) {
             response.setProductId(detail.getProduct().getProductId());
             response.setProductName(detail.getProduct().getProductName());
         }
 
+        // Map OrderDetailFill info
+        if (detail.getOrderDetailFills() != null) {
+            List<OrderDetailFillResponse> fills = detail.getOrderDetailFills().stream()
+                    .map(this::mapToFillResponse)
+                            .collect(Collectors.toList());
+            response.setOrderDetailFills(fills);
+
+//            List<OrderDetailFillResponse> fills = detail.getOrderDetailFills().stream()
+//                    .map(fill -> mapToFillResponse(fill))
+//                    .collect(Collectors.toList());
+        }
+
         response.setQuantity(detail.getQuantity());
+        return response;
+    }
+
+    private OrderDetailFillResponse mapToFillResponse(OrderDetailFill fill) {
+
+        OrderDetailFillResponse response = new OrderDetailFillResponse();
+
+        response.setFillId(fill.getFillId());
+        response.setOrderDetailId(fill.getOrderDetail().getOrderDetailId());
+        response.setBatchId(fill.getBatch().getBatchId());
+        response.setQuantity(fill.getQuantity());
+        response.setCreatedAt(fill.getCreatedAt());
+
         return response;
     }
 }

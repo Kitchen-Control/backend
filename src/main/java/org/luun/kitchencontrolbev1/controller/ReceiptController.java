@@ -31,9 +31,9 @@ public class ReceiptController {
         return receiptService.createReceipt(orderId, note);
     }
 
-    @PatchMapping("/{receiptId}/confirm")
+    @PostMapping("/confirm")
     @Operation(summary = "Confirm export and deduct physical inventory")
-    public ReceiptResponse confirmReceipt(@PathVariable Integer receiptId) {
-        return receiptService.confirmReceipt(receiptId);
+    public void confirmReceipt(@RequestBody List<Integer> receiptId) {
+        receiptService.confirmReceipt(receiptId);
     }
 }

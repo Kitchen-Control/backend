@@ -11,6 +11,7 @@ import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.OrderDetail;
 import org.luun.kitchencontrolbev1.entity.User;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
+import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 import org.luun.kitchencontrolbev1.repository.DeliveryRepository;
 import org.luun.kitchencontrolbev1.repository.OrderRepository;
 import org.luun.kitchencontrolbev1.repository.UserRepository;
@@ -91,7 +92,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional
-    // Bước 4: Giao hàng (Shipping) - App shipper bấm "Bắt đầu đi giao"
+    // Bước 4: Giao hàng (Shipping) - App shipper bấm "Nhận và giao"
     public DeliveryResponse startDelivery(Integer deliveryId) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
@@ -104,10 +105,9 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         // Tự động chuyển các đơn thuộc chuyến đó orders.status -> DELIVERING
         for (Order order : orders) {
-            if (order.getStatus() == OrderStatus.PROCESSING) {
+            if (order.getStatus() == OrderStatus.DISPATCHED) {
                 order.setStatus(OrderStatus.DELIVERING);
             } else {
-                // Có thể throw hoặc bỏ qua tuỳ logic, nhưng yêu cầu đề bài chuyển các đơn
                 throw new RuntimeException(
                         "Order " + order.getOrderId() + " is not ready for delivery (Not PROCESSING).");
             }
@@ -115,27 +115,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         return mapToResponse(deliveryRepository.save(delivery));
     }
-
-    // @Override
-    // public DeliveryResponse assignShipperToDelivery(Integer deliveryId, Integer
-    // shipperId) {
-    // Delivery delivery = deliveryRepository.findById(deliveryId)
-    // .orElseThrow(() -> new RuntimeException("Delivery not found with id: " +
-    // deliveryId));
-    //
-    // User shipper = userRepository.findById(shipperId)
-    // .orElseThrow(() -> new RuntimeException("Shipper not found with id: " +
-    // shipperId));
-    //
-    // // You might want to check if the user is actually a shipper here
-    // if (!shipper.getRole().equals("Shipper")) {
-    // throw new RuntimeException("User is not a shipper");
-    // }
-    // delivery.setShipper(shipper);
-    // Delivery updatedDelivery = deliveryRepository.save(delivery);
-    //
-    // return mapToResponse(updatedDelivery);
-    // }
 
     private DeliveryResponse mapToResponse(Delivery delivery) {
         DeliveryResponse response = new DeliveryResponse();
