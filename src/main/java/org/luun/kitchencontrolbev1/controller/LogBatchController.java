@@ -49,13 +49,13 @@ public class LogBatchController {
         return logBatchService.getLogBatchesByStatus(status);
     }
 
-    @PostMapping
+    @PostMapping("/production")
     @Operation(summary = "Create a new log batch (Production)")
-    public LogBatchResponse createLogProBatch(@RequestBody LogBatchRequest request) {
+    public LogBatchResponse createProLogBatch(@RequestBody LogBatchRequest request) {
         return logBatchService.createProductionLogBatch(request);
     }
 
-    @PostMapping
+    @PostMapping("/purchase")
     @Operation(summary = "Create a new log batch (Purchase)")
     public LogBatchResponse createPurLogBatch(@RequestBody LogBatchRequest request) {
         return logBatchService.createPurchaseLogBatch(request);
