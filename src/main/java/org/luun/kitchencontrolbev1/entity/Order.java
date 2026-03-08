@@ -51,6 +51,6 @@ public class Order {
     private QualityFeedback qualityFeedback;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Receipt> receipts;
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Receipt receipts;
 }

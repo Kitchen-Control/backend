@@ -52,11 +52,11 @@ public class LogBatch {
     private LocalDateTime createdAt;
 
     @JsonManagedReference
-    @OneToOne(mappedBy = "batch")
+    @OneToOne(mappedBy = "batch", cascade = CascadeType.ALL)
     private Inventory inventory;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "batch")
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL)
     private List<InventoryTransaction> inventoryTransactions;
 
     @JsonManagedReference

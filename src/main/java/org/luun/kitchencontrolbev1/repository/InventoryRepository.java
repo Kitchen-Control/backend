@@ -13,7 +13,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.product.productId = :productId")
     Float getTotalQuantityByProductId(@Param("productId") Integer productId);
 
-
     // This query retrieves all inventory records for a specific product that have not expired
     // and have a quantity greater than 0, ordered by expiry date in ascending order.
     @Query("SELECT i " +

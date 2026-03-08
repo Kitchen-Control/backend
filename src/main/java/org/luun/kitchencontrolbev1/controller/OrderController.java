@@ -33,7 +33,7 @@ public class OrderController {
     }
 
     @GetMapping("/filter-by-status")
-    @Operation(summary = "Get orders by status", description = "Get orders by status (WAITTING, PROCESSING, DELIVERING, DONE, DAMAGED, CANCLED)")
+    @Operation(summary = "Get orders by status", description = "Get orders by status (WAITTING, PROCESSING, DELIVERING, DISPATCHED, DONE, DAMAGED, CANCLED)")
     public List<OrderResponse> getOrdersByStatus(@RequestParam OrderStatus status) {
         return orderService.getOrdersByStatus(status);
     }
@@ -54,12 +54,6 @@ public class OrderController {
     @Operation(summary = "Update order status")
     public OrderResponse updateOrderStatus(@RequestParam Integer orderId, @RequestParam("status") OrderStatus status) {
         return orderService.updateOrderStatus(orderId, status);
-    }
-
-    @GetMapping("/waiting")
-    @Operation(summary = "Get all waiting order")
-    public List<OrderResponse> getWaitingOrders() {
-        return orderService.getWaitingOrder();
     }
 
     @PatchMapping("/{orderId}/complete")
