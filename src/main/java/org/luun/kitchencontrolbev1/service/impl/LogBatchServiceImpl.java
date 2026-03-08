@@ -181,22 +181,28 @@ public class LogBatchServiceImpl implements LogBatchService {
         inventoryTransactionRepository.save(trans);
     }
 
-    @Transactional
-    protected void handleBatchExpired(LogBatch logBatch) {
-
-        // 2. Tạo Inventory mới
-        if()
-
-        // 3. Tạo Transaction log (Xuất kho do hàng hết hạn)
-        InventoryTransaction trans = new InventoryTransaction();
-        trans.setProduct(logBatch.getProduct());
-        trans.setBatch(logBatch);
-        trans.setType(InventoryTransactionType.IMPORT);
-        trans.setQuantity(logBatch.getQuantity());
-        trans.setCreatedAt(LocalDateTime.now());
-
-        inventoryTransactionRepository.save(trans);
-    }
+//    @Transactional
+//    protected void handleBatchExpired(LogBatch logBatch) {
+//
+//        // 1. Kiểm tra xem đã có Inventory cho lô này chưa
+//        Inventory inventory = inventoryRepository.findByBatchBatchId(logBatch.getBatchId())
+//                .orElseThrow(() -> new RuntimeException("Inventory not found for batch: " + logBatch.getBatchId()));
+//
+//        // 2. kiểm tra Inventory còn hàng k
+//        if(!(inventory.getQuantity() > 0)) {
+//            throw new RuntimeException("Inventory is empty");
+//        }
+//
+//        // 3. Tạo Transaction log (Xuất kho do hàng hết hạn)
+//        InventoryTransaction trans = new InventoryTransaction();
+//        trans.setProduct(logBatch.getProduct());
+//        trans.setBatch(logBatch);
+//        trans.setType(InventoryTransactionType.IMPORT);
+//        trans.setQuantity(logBatch.getQuantity());
+//        trans.setCreatedAt(LocalDateTime.now());
+//
+//        inventoryTransactionRepository.save(trans);
+//    }
 
     /**
      * This method is scheduled to run automatically to check for expired batches.
