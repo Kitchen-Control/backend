@@ -46,6 +46,14 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    public List<ReceiptResponse> getByStatus(ReceiptStatus status) {
+        List<Receipt> receipts = receiptRepository.findByStatus(status);
+        return receipts.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     // Giai đoạn 3.2: Tạo Phiếu Xuất (Receipt Creation)
     // Thủ kho kiểm tra rồi ấn tạo phiếu
     public ReceiptResponse createReceipt(Integer orderId, String note) {
@@ -126,6 +134,24 @@ public class ReceiptServiceImpl implements ReceiptService {
             }
             receiptRepository.save(receipt);
         }
+    }
+
+    @Override
+    @Transactional
+    public ReceiptResponse updateReceiptStatus(Integer receiptId, ReceiptStatus status) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
+
+        if (status != ReceiptStatus.CANCELLED || receipt.getStatus() == ReceiptStatus.COMPLETED) {
+            throw new RuntimeException("Receipt have completed, can not update status");
+        } else if (receipt.getStatus() == ReceiptStatus.CANCELLED) {
+            throw new RuntimeException("Receipt have been cancelled");
+        }
+
+        receipt.setStatus(status);
+        Receipt updatedReceipt = receiptRepository.save(receipt);
+
+        return mapToResponse(updatedReceipt);
     }
 
     private ReceiptResponse mapToResponse(Receipt receipt) {

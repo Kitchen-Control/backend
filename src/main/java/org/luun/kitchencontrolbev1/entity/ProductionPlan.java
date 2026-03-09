@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.luun.kitchencontrolbev1.enums.ProductionPlanStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -29,8 +30,9 @@ public class ProductionPlan {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Column(name = "status", length = 255)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "production_plan_status")
+    private ProductionPlanStatus status;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;

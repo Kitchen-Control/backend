@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -130,21 +131,20 @@ public class LogBatchServiceImpl implements LogBatchService {
 
     @Override
     @Transactional
-    public LogBatchResponse updateLogBatchStatus(Integer batchId, LogBatchStatus status) {
+    public LogBatchResponse updateLogBatchStatus(Integer batchId, LogBatchStatus newStatus) {
         // 1. Lấy LogBatch từ DB
         LogBatch logBatch = logBatchRepository.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("LogBatch not found"));
 
-        // 2. Kiểm tra logic chuyển đổi trạng thái (Optional)
-        // Ví dụ: Không thể chuyển từ CANCELLED về PROCESSING
-//        validateStatusTransition(logBatch.getStatus(), newStatus);
+        // 2. Kiểm tra logic chuyển đổi trạng thái
+        validateStatusTransition(logBatch.getStatus(), newStatus);
 
         // 3. Xử lý logic riêng cho từng trạng thái
-        switch (status) {
+        switch (newStatus) {
             case DONE:
                 handleBatchDone(logBatch);
                 break;
-            case EXPIRED:
+            case DAMAGED:
                 handleBatchDamaged(logBatch);
                 break;
             default:
@@ -153,8 +153,33 @@ public class LogBatchServiceImpl implements LogBatchService {
         }
 
         // 4. Cập nhật status và lưu
-        logBatch.setStatus(status);
+        logBatch.setStatus(newStatus);
         return mapToResponse(logBatchRepository.save(logBatch));
+    }
+
+    private void validateStatusTransition(LogBatchStatus currentStatus, LogBatchStatus newStatus) {
+        // Chỉ cho phép chuyển từ DAMAGED hoặc WAITING_TO_CANCLE sang các trạng thái cuối cùng
+        if (currentStatus == LogBatchStatus.DAMAGED) {
+            throw new IllegalStateException("Cannot change status from " + currentStatus);
+        }
+
+        // Quy tắc chuyển trạng thái theo bậc
+        Map<LogBatchStatus, LogBatchStatus> allowedTransitions = Map.of(
+                LogBatchStatus.PROCESSING, LogBatchStatus.WAITING_TO_CONFIRM,
+                LogBatchStatus.WAITING_TO_CONFIRM, LogBatchStatus.DONE
+        );
+
+        LogBatchStatus expectedNextStatus = allowedTransitions.get(currentStatus);
+
+        // Cho phép chuyển sang DAMAGED hoặc WAITING_TO_CANCLE từ bất kỳ đâu (trừ trạng thái cuối)
+        if (newStatus == LogBatchStatus.DAMAGED || newStatus == LogBatchStatus.WAITING_TO_CANCLE) {
+            return;
+        }
+
+        if (expectedNextStatus != newStatus) {
+            throw new IllegalStateException("Invalid status transition from " + currentStatus + " to " + newStatus +
+                    ". Expected next status: " + expectedNextStatus);
+        }
     }
 
     @Transactional
