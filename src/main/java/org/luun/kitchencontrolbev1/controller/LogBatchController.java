@@ -7,6 +7,7 @@ import org.luun.kitchencontrolbev1.dto.request.LogBatchRequest;
 import org.luun.kitchencontrolbev1.dto.response.LogBatchResponse;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.service.LogBatchService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,5 +68,12 @@ public class LogBatchController {
             @PathVariable Integer batchId,
             @RequestParam LogBatchStatus status) {
         return logBatchService.updateLogBatchStatus(batchId, status);
+    }
+
+    @PutMapping("/{batchId}/expire")
+    @Operation(summary = "Mark a log batch as expired and decrease inventory")
+    public ResponseEntity<Void> expireLogBatch(@PathVariable Integer batchId) {
+        logBatchService.expireLogBatch(batchId);
+        return ResponseEntity.ok().build();
     }
 }

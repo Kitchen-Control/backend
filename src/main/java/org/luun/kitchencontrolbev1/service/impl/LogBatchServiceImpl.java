@@ -1,6 +1,7 @@
 package org.luun.kitchencontrolbev1.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.luun.kitchencontrolbev1.dto.request.LogBatchRequest;
 import org.luun.kitchencontrolbev1.dto.response.LogBatchResponse;
 import org.luun.kitchencontrolbev1.entity.*;
@@ -10,6 +11,7 @@ import org.luun.kitchencontrolbev1.enums.LogBatchType;
 import org.luun.kitchencontrolbev1.repository.LogBatchRepository;
 import org.luun.kitchencontrolbev1.repository.ProductRepository;
 import org.luun.kitchencontrolbev1.repository.ProductionPlanRepository;
+import org.luun.kitchencontrolbev1.service.InventoryService;
 import org.luun.kitchencontrolbev1.service.LogBatchService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,12 +23,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class LogBatchServiceImpl implements LogBatchService {
 
     private final LogBatchRepository logBatchRepository;
     private final ProductionPlanRepository productionPlanRepository;
     private final ProductRepository productRepository;
+    private final InventoryService inventoryService;
 
     @Override
     public List<LogBatchResponse> getAllLogBatches() {
@@ -155,14 +159,31 @@ public class LogBatchServiceImpl implements LogBatchService {
         return mapToResponse(updatedBatch);
     }
 
+    @Override
+    @Transactional
+    public void expireLogBatch(Integer batchId) {
+        LogBatch logBatch = logBatchRepository.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("LogBatch not found with id: " + batchId));
+
+        if (logBatch.getStatus() != LogBatchStatus.WAITING_TO_CANCLE) {
+            throw new RuntimeException("Only batches with status WAITING_TO_CANCLE can be expired.");
+        }
+
+        logBatch.setStatus(LogBatchStatus.EXPIRED);
+        logBatchRepository.save(logBatch);
+
+        inventoryService.decreaseProductQuantity(logBatch.getProduct().getProductId(), logBatch.getQuantity());
+    }
+
     /**
      * This method is scheduled to run automatically to check for expired batches.
      * It finds batches that are expired and not yet marked as WAITING_TO_CANCLE or EXPIRED,
      * and updates their status to WAITING_TO_CANCLE.
      */
-    @Scheduled(cron = "0 0 1 * * ?") // Runs every day at 1:00 AM
+    @Scheduled(cron = "0 0 1 * * ?", zone = "Asia/Ho_Chi_Minh") // Runs every day at 1:00 AM and in Vietnam time
     @Transactional
     public void updateExpiredBatches() {
+        log.info("Checking for expired batches...");
         LocalDate today = LocalDate.now();
 
         // Find batches that are expired (expiry_date < today) and have a status that can be changed
@@ -176,7 +197,7 @@ public class LogBatchServiceImpl implements LogBatchService {
             batch.setStatus(LogBatchStatus.WAITING_TO_CANCLE);
             logBatchRepository.save(batch);
             // You might want to add logging here to record which batches were updated
-            System.out.println("Batch ID " + batch.getBatchId() + " has expired and status updated to WAITING_TO_CANCLE.");
+            log.info("Batch ID " + batch.getBatchId() + " has expired and status updated to WAITING_TO_CANCLE.");
         }
     }
 
