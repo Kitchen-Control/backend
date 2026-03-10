@@ -11,7 +11,10 @@ import java.util.List;
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     Optional<Inventory> findByBatchBatchId(Integer batchId);
 
-    @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.product.productId = :productId")
+    @Query(value = "SELECT COALESCE(SUM(i.quantity), 0) FROM inventories i " +
+            "JOIN log_batches lb ON lb.batch_id = i.batch_id " +
+            "WHERE i.product_id = :productId " +
+            "AND lb.status::text IN ('DONE', 'PROCESSING')", nativeQuery = true)
     Float getTotalQuantityByProductId(@Param("productId") Integer productId);
 
     // This query retrieves all inventory records for a specific product that have not expired

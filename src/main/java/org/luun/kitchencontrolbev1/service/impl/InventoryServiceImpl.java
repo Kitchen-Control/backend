@@ -35,7 +35,7 @@ public class InventoryServiceImpl implements InventoryService {
         if (totalInventory == null)
             totalInventory = 0f;
 
-        List<OrderStatus> statuses = Arrays.asList(OrderStatus.WAITTING, OrderStatus.PROCESSING);
+        List<String> statuses = Arrays.asList(OrderStatus.WAITTING.name(), OrderStatus.PROCESSING.name());
         Float totalOrdered = orderDetailRepository.getTotalQuantityByProductIdAndOrderStatusIn(productId, statuses);
         if (totalOrdered == null)
             totalOrdered = 0f;
