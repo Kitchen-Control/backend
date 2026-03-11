@@ -8,6 +8,7 @@ import org.luun.kitchencontrolbev1.dto.response.ProductionPlanResponse;
 import org.luun.kitchencontrolbev1.entity.Product;
 import org.luun.kitchencontrolbev1.entity.ProductionPlan;
 import org.luun.kitchencontrolbev1.entity.ProductionPlanDetail;
+import org.luun.kitchencontrolbev1.enums.ProductionPlanStatus;
 import org.luun.kitchencontrolbev1.repository.ProductRepository;
 import org.luun.kitchencontrolbev1.repository.ProductionPlanRepository;
 import org.luun.kitchencontrolbev1.service.ProductionPlanService;
@@ -46,7 +47,7 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         plan.setPlanDate(request.getPlanDate());
         plan.setStartDate(request.getStartDate());
         plan.setEndDate(request.getEndDate());
-        plan.setStatus(request.getStatus());
+        plan.setStatus(ProductionPlanStatus.valueOf(request.getStatus()));
         plan.setNote(request.getNote());
 
         // 2. Create details and add to the plan using the helper method
@@ -84,7 +85,7 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         response.setPlanDate(productionPlan.getPlanDate());
         response.setStartDate(productionPlan.getStartDate());
         response.setEndDate(productionPlan.getEndDate());
-        response.setStatus(productionPlan.getStatus());
+        response.setStatus(productionPlan.getStatus().name());
         response.setNote(productionPlan.getNote());
 
         if(productionPlan.getProductionPlanDetails() != null) {

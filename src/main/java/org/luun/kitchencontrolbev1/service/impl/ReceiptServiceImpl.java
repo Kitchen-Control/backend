@@ -173,7 +173,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     @Transactional
     protected void handleReceiptCancelled(Receipt receipt) {
-        Order order = orderRepository.findByReceipt_ReceiptId(receipt.getReceiptId());
+        Order order = orderRepository.findByReceipts_ReceiptId(receipt.getReceiptId());
 
         if(order == null) {
             throw new IllegalStateException("Order not found for this receipt");

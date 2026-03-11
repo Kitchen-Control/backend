@@ -20,5 +20,5 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     List<Order> findByDelivery_Shipper_UserId(Integer shipperId);
 
-    Order findByReceipt_ReceiptId(Integer receiptId);
+    Order findByReceipts_ReceiptId(Integer receiptId);
 }
