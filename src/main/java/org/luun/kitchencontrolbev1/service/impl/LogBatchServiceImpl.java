@@ -1,6 +1,7 @@
 package org.luun.kitchencontrolbev1.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.luun.kitchencontrolbev1.dto.request.LogBatchRequest;
 import org.luun.kitchencontrolbev1.dto.response.LogBatchResponse;
 import org.luun.kitchencontrolbev1.entity.*;
@@ -8,6 +9,7 @@ import org.luun.kitchencontrolbev1.enums.InventoryTransactionType;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.enums.LogBatchType;
 import org.luun.kitchencontrolbev1.repository.*;
+import org.luun.kitchencontrolbev1.service.InventoryService;
 import org.luun.kitchencontrolbev1.service.LogBatchService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class LogBatchServiceImpl implements LogBatchService {
 
@@ -28,6 +31,7 @@ public class LogBatchServiceImpl implements LogBatchService {
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final ReportRepository reportRepository;
 
     @Override
     public List<LogBatchResponse> getAllLogBatches() {
@@ -59,7 +63,7 @@ public class LogBatchServiceImpl implements LogBatchService {
 
     @Override
     public List<LogBatchResponse> getLogBatchesByStatus(LogBatchStatus status) {
-        return logBatchRepository.findByStatus(status).stream()
+        return logBatchRepository.findByStatus(status.name()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -190,6 +194,69 @@ public class LogBatchServiceImpl implements LogBatchService {
         return true;
     }
 
+    @Override
+    @Transactional
+    public void expireLogBatch(Integer batchId) {
+        // 1. Finding LogBatch
+        LogBatch logBatch = logBatchRepository.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("LogBatch not found with id: " + batchId));
+
+        // 2. Just allow log batch status is WAITING_TO_CANCLE
+        if (logBatch.getStatus() != LogBatchStatus.WAITING_TO_CANCLE) throw new RuntimeException("LogBatch status must be WAITING_TO_CANCLE");
+
+        // 3. Set status = DAMAGED
+        logBatch.setStatus(LogBatchStatus.DAMAGED);
+        logBatchRepository.save(logBatch);
+
+        // 4. Finding inventory CỦA CHÍNH LÔ NÀY → set quantity = 0
+        Inventory inventory = inventoryRepository.findByBatchBatchId(batchId)
+                .orElseThrow(() -> new RuntimeException("Inventory not found with batchId: " + batchId));
+        float disposedQuantity = inventory.getQuantity();
+        inventory.setQuantity(0f);
+        inventoryRepository.save(inventory);
+
+        // 5. Creating inventory_transaction with note
+        InventoryTransaction tx = new InventoryTransaction();
+        tx.setType(InventoryTransactionType.EXPORT);
+        tx.setQuantity(disposedQuantity);
+        tx.setNote("Thủ kho xác nhận xuất hủy hàng hết hạn");
+        tx.setBatch(logBatch);
+        tx.setProduct(logBatch.getProduct());
+        inventoryTransactionRepository.save(tx);
+
+        Report report = new Report();
+        report.setReportType("WASTE");
+        report.setCreatedDate(LocalDateTime.now());
+        report.setUser(null);
+        reportRepository.save(report);
+    }
+
+    /**
+     * This method is scheduled to run automatically to check for expired batches.
+     * It finds batches that are expired and not yet marked as WAITING_TO_CANCLE or EXPIRED,
+     * and updates their status to WAITING_TO_CANCLE.
+     */
+    @Scheduled(cron = "0 1 0  * * ?", zone = "Asia/Ho_Chi_Minh") // Runs every day at 1:00 AM and in Vietnam time
+    @Transactional
+    public void updateExpiredBatches() {
+        log.warn("Checking for expired batches...");
+        LocalDate today = LocalDate.now();
+
+        // Find batches that are expired (expiry_date < today) and have a status that can be changed
+        // (e.g., DONE, PROCESSING). We don't want to change batches that are already handled.
+        List<LogBatch> expiredBatches = logBatchRepository.findByExpiryDateBeforeAndStatusIn(
+                today,
+                List.of(LogBatchStatus.DONE.name())
+        );
+        if(expiredBatches.isEmpty()) {
+            log.warn("No expired batches found.");
+            return;
+        }
+        for (LogBatch batch : expiredBatches) {
+            batch.setStatus(LogBatchStatus.WAITING_TO_CANCLE);
+            logBatchRepository.save(batch);
+            // You might want to add logging here to record which batches were updated
+            log.warn("Batch ID " + batch.getBatchId() + " has expired and status updated to WAITING_TO_CANCLE.");
     @Transactional
     protected void handleBatchDone(LogBatch logBatch) {
 

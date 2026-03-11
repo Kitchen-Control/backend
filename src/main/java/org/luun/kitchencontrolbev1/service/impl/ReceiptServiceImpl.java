@@ -113,10 +113,10 @@ public class ReceiptServiceImpl implements ReceiptService {
                         .orElseThrow(() -> new RuntimeException(
                                 "Inventory not found for batch: " + fill.getBatch().getBatchId()));
 
-                // Trừ lượng hàng đã giữ chỗ
                 Float currentQuantity = inv.getQuantity();
                 Float quantityToExport = fill.getQuantity();
 
+                // Trừ lượng hàng đã giữ chỗ
                 inv.setQuantity(currentQuantity - quantityToExport);
                 inventoryRepository.save(inv);
 
