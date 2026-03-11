@@ -202,7 +202,7 @@ public class LogBatchServiceImpl implements LogBatchService {
                 .orElseThrow(() -> new RuntimeException("LogBatch not found with id: " + batchId));
 
         // 2. Just allow log batch status is WAITING_TO_CANCLE
-        if (logBatch.getStatus() != LogBatchStatus.WAITING_TO_CANCLE) throw new RuntimeException("LogBatch status must be WAITING_TO_CANCLE");
+        if (logBatch.getStatus() != LogBatchStatus.WAITING_TO_CANCEL) throw new RuntimeException("LogBatch status must be WAITING_TO_CANCLE");
 
         // 3. Set status = DAMAGED
         logBatch.setStatus(LogBatchStatus.DAMAGED);
@@ -253,7 +253,7 @@ public class LogBatchServiceImpl implements LogBatchService {
             return;
         }
         for (LogBatch batch : expiredBatches) {
-            batch.setStatus(LogBatchStatus.WAITING_TO_CANCLE);
+            batch.setStatus(LogBatchStatus.WAITING_TO_CANCEL);
             logBatchRepository.save(batch);
             // You might want to add logging here to record which batches were updated
             log.warn("Batch ID " + batch.getBatchId() + " has expired and status updated to WAITING_TO_CANCLE.");
