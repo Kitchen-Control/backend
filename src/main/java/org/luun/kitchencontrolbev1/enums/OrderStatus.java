@@ -1,11 +1,11 @@
 package org.luun.kitchencontrolbev1.enums;
 
 public enum OrderStatus {
-    WAITTING,
+    WAITING,
     PROCESSING,
     DISPATCHED,
     DELIVERING,
     DONE,
     DAMAGED,
-    CANCLED
+    CANCELED
 }

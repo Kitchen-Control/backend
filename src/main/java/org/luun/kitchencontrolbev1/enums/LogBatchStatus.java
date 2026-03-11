@@ -4,6 +4,6 @@ public enum LogBatchStatus {
     PROCESSING,
     WAITING_TO_CONFIRM,
     DONE,
-    WAITING_TO_CANCLE,
+    WAITING_TO_CANCEL,
     DAMAGED
 }

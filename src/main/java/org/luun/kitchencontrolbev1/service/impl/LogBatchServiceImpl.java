@@ -137,7 +137,9 @@ public class LogBatchServiceImpl implements LogBatchService {
                 .orElseThrow(() -> new RuntimeException("LogBatch not found"));
 
         // 2. Kiểm tra logic chuyển đổi trạng thái
-        validateStatusTransition(logBatch.getStatus(), newStatus);
+        if(!validateStatusTransition(logBatch.getStatus(), newStatus)) {
+            throw new RuntimeException("Invalid status transition");
+        }
 
         // 3. Xử lý logic riêng cho từng trạng thái
         switch (newStatus) {
@@ -157,29 +159,35 @@ public class LogBatchServiceImpl implements LogBatchService {
         return mapToResponse(logBatchRepository.save(logBatch));
     }
 
-    private void validateStatusTransition(LogBatchStatus currentStatus, LogBatchStatus newStatus) {
-        // Chỉ cho phép chuyển từ DAMAGED hoặc WAITING_TO_CANCLE sang các trạng thái cuối cùng
+    private Boolean validateStatusTransition(LogBatchStatus currentStatus, LogBatchStatus newStatus) {
+
+        // handle DAMAGED status
         if (currentStatus == LogBatchStatus.DAMAGED) {
             throw new IllegalStateException("Cannot change status from " + currentStatus);
         }
 
-        // Quy tắc chuyển trạng thái theo bậc
-        Map<LogBatchStatus, LogBatchStatus> allowedTransitions = Map.of(
-                LogBatchStatus.PROCESSING, LogBatchStatus.WAITING_TO_CONFIRM,
-                LogBatchStatus.WAITING_TO_CONFIRM, LogBatchStatus.DONE
-        );
-
-        LogBatchStatus expectedNextStatus = allowedTransitions.get(currentStatus);
-
-        // Cho phép chuyển sang DAMAGED hoặc WAITING_TO_CANCLE từ bất kỳ đâu (trừ trạng thái cuối)
-        if (newStatus == LogBatchStatus.DAMAGED || newStatus == LogBatchStatus.WAITING_TO_CANCLE) {
-            return;
+        // handle PROCESSING status
+        if (currentStatus == LogBatchStatus.PROCESSING
+                && (newStatus == LogBatchStatus.DONE || newStatus == LogBatchStatus.DAMAGED)) {
+            throw new IllegalStateException("Cannot change status from PROCESSING to DONE or DAMAGED");
         }
 
-        if (expectedNextStatus != newStatus) {
-            throw new IllegalStateException("Invalid status transition from " + currentStatus + " to " + newStatus +
-                    ". Expected next status: " + expectedNextStatus);
+        // handle DONE status
+        if (currentStatus == LogBatchStatus.DONE && newStatus != LogBatchStatus.WAITING_TO_CANCEL) {
+            throw new IllegalStateException("Cannot change status from DONE to " + newStatus);
         }
+
+        // handle WAITING_TO_CONFIRM status
+        if (currentStatus == LogBatchStatus.WAITING_TO_CONFIRM && newStatus != LogBatchStatus.DONE) {
+            throw new IllegalStateException("Cannot change status from WAITING_TO_CONFIRM to " + newStatus);
+        }
+
+        // handle WAITING_TO_CANCLE status
+        if (currentStatus == LogBatchStatus.DONE && newStatus != LogBatchStatus.WAITING_TO_CANCEL) {
+            throw new IllegalStateException("Cannot change status from DONE to " + newStatus);
+        }
+
+        return true;
     }
 
     @Transactional
@@ -221,43 +229,18 @@ public class LogBatchServiceImpl implements LogBatchService {
             throw new RuntimeException("Inventory is empty");
         }
 
-        // 3. Tạo Transaction log (Xuất kho do hàng hết hạn)
+        // 3. Tạo Transaction log (Xuất kho do hàng hết hạn hoặc hỏng)
         InventoryTransaction trans = new InventoryTransaction();
         trans.setProduct(logBatch.getProduct());
         trans.setBatch(logBatch);
         trans.setType(InventoryTransactionType.EXPORT);
         trans.setQuantity(inventory.getQuantity());
         trans.setCreatedAt(LocalDateTime.now());
-        trans.setNote("Hủy hàng hết hạn");
+        trans.setNote("Hủy hàng");
         inventoryTransactionRepository.save(trans);
 
         inventory.setQuantity((float) 0);
         inventoryRepository.save(inventory);
-    }
-
-    /**
-     * This method is scheduled to run automatically to check for expired batches.
-     * It finds batches that are expired and not yet marked as WAITING_TO_CANCLE or EXPIRED,
-     * and updates their status to WAITING_TO_CANCLE.
-     */
-    @Scheduled(cron = "0 0 1 * * ?") // Runs every day at 1:00 AM
-    @Transactional
-    public void updateExpiredBatches() {
-        LocalDate today = LocalDate.now();
-
-        // Find batches that are expired (expiry_date < today) and have a status that can be changed
-        // (e.g., DONE, PROCESSING). We don't want to change batches that are already handled.
-        List<LogBatch> expiredBatches = logBatchRepository.findByExpiryDateBeforeAndStatusIn(
-                today,
-                List.of(LogBatchStatus.DONE, LogBatchStatus.PROCESSING)
-        );
-
-        for (LogBatch batch : expiredBatches) {
-            updateLogBatchStatus(batch.getBatchId(), LogBatchStatus.WAITING_TO_CANCLE);
-            logBatchRepository.save(batch);
-            // You might want to add logging here to record which batches were updated
-            System.out.println("Batch ID " + batch.getBatchId() + " has expired and status updated to WAITING_TO_CANCLE.");
-        }
     }
 
     private LogBatchResponse mapToResponse(LogBatch batch) {

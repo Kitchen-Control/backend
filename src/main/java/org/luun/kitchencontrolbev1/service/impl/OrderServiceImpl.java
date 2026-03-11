@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,7 +25,6 @@ public class OrderServiceImpl implements OrderService {
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    private final OrderDetailRepository orderDetailRepository;
 
     @Override
     public List<OrderResponse> getOrders() {
@@ -59,7 +57,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setStore(store);
         order.setOrderDate(LocalDateTime.now());
-        order.setStatus(OrderStatus.WAITTING);
+        order.setStatus(OrderStatus.WAITING);
         order.setComment(request.getComment());
 
         // 3. Create OrderDetail objects and set the bidirectional relationship

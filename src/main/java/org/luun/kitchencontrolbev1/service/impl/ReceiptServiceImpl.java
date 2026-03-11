@@ -138,20 +138,47 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     @Override
     @Transactional
-    public ReceiptResponse updateReceiptStatus(Integer receiptId, ReceiptStatus status) {
+    public ReceiptResponse updateReceiptStatus(Integer receiptId, ReceiptStatus newStatus) {
         Receipt receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
 
-        if (status != ReceiptStatus.CANCELLED || receipt.getStatus() == ReceiptStatus.COMPLETED) {
-            throw new RuntimeException("Receipt have completed, can not update status");
-        } else if (receipt.getStatus() == ReceiptStatus.CANCELLED) {
-            throw new RuntimeException("Receipt have been cancelled");
+        validateStatusTransition(receipt.getStatus(), newStatus);
+
+        switch (newStatus) {
+            case CANCELED:
+                handleReceiptCancelled(receipt);
+                break;
+            default:
+                // Các trạng thái khác chỉ cần update status bình thường
+                break;
         }
 
-        receipt.setStatus(status);
+        receipt.setStatus(newStatus);
         Receipt updatedReceipt = receiptRepository.save(receipt);
 
         return mapToResponse(updatedReceipt);
+    }
+
+    private void validateStatusTransition(ReceiptStatus status, ReceiptStatus newStatus) {
+
+        // handle DRAFT status
+        if(status == ReceiptStatus.CANCELED){
+            throw new IllegalStateException("Cannot change status from " + status);
+        }
+
+        // handle COMPLETED status
+
+
+    }
+
+    @Transactional
+    protected void handleReceiptCancelled(Receipt receipt) {
+        Order order = orderRepository.findByReceipt_ReceiptId(receipt.getReceiptId());
+
+        if(order == null) {
+            throw new IllegalStateException("Order not found for this receipt");
+        }
+
     }
 
     private ReceiptResponse mapToResponse(Receipt receipt) {

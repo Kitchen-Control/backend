@@ -71,8 +71,6 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         }
         plan.setProductionPlanDetails(productionPlanDetails);
 
-
-
         // 3. Save the plan (details will be saved by cascade)
         ProductionPlan savedPlan = productionPlanRepository.save(plan);
 
