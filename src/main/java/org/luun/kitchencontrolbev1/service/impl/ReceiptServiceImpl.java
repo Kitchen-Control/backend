@@ -46,6 +46,14 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    public List<ReceiptResponse> getByStatus(ReceiptStatus status) {
+        List<Receipt> receipts = receiptRepository.findByStatus(status);
+        return receipts.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     // Giai đoạn 3.2: Tạo Phiếu Xuất (Receipt Creation)
     // Thủ kho kiểm tra rồi ấn tạo phiếu
     public ReceiptResponse createReceipt(Integer orderId, String note) {
@@ -126,6 +134,51 @@ public class ReceiptServiceImpl implements ReceiptService {
             }
             receiptRepository.save(receipt);
         }
+    }
+
+    @Override
+    @Transactional
+    public ReceiptResponse updateReceiptStatus(Integer receiptId, ReceiptStatus newStatus) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
+
+        validateStatusTransition(receipt.getStatus(), newStatus);
+
+        switch (newStatus) {
+            case CANCELED:
+                handleReceiptCancelled(receipt);
+                break;
+            default:
+                // Các trạng thái khác chỉ cần update status bình thường
+                break;
+        }
+
+        receipt.setStatus(newStatus);
+        Receipt updatedReceipt = receiptRepository.save(receipt);
+
+        return mapToResponse(updatedReceipt);
+    }
+
+    private void validateStatusTransition(ReceiptStatus status, ReceiptStatus newStatus) {
+
+        // handle DRAFT status
+        if(status == ReceiptStatus.CANCELED){
+            throw new IllegalStateException("Cannot change status from " + status);
+        }
+
+        // handle COMPLETED status
+
+
+    }
+
+    @Transactional
+    protected void handleReceiptCancelled(Receipt receipt) {
+        Order order = orderRepository.findByReceipt_ReceiptId(receipt.getReceiptId());
+
+        if(order == null) {
+            throw new IllegalStateException("Order not found for this receipt");
+        }
+
     }
 
     private ReceiptResponse mapToResponse(Receipt receipt) {

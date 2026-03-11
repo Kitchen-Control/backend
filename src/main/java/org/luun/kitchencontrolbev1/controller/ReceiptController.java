@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.dto.response.ReceiptResponse;
+import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 import org.luun.kitchencontrolbev1.service.ReceiptService;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,12 @@ public class ReceiptController {
         return receiptService.getByOrderId(orderId);
     }
 
+    @GetMapping("/status/{status}")
+    @Operation(summary = "Get all receipts by Status")
+    public List<ReceiptResponse> getByStatus(@PathVariable ReceiptStatus status) {
+        return receiptService.getByStatus(status);
+    }
+
     @PostMapping("/order/{orderId}")
     @Operation(summary = "Create a draft receipt for an order")
     public ReceiptResponse createReceipt(
@@ -35,5 +42,13 @@ public class ReceiptController {
     @Operation(summary = "Confirm export and deduct physical inventory")
     public void confirmReceipt(@RequestBody List<Integer> receiptId) {
         receiptService.confirmReceipt(receiptId);
+    }
+
+    @PatchMapping("/{receiptId}/status")
+    @Operation(summary = "Update receipt status (Use confirmReceipt for COMPLETED)")
+    public ReceiptResponse updateReceiptStatus(
+            @PathVariable Integer receiptId,
+            @RequestParam ReceiptStatus status) {
+        return receiptService.updateReceiptStatus(receiptId, status);
     }
 }
