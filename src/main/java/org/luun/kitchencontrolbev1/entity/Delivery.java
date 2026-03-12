@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +31,10 @@ public class Delivery {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "deliveries_status")
+    private DeliveryStatus status;
 
     @JsonManagedReference
     @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL)

@@ -1,7 +1,9 @@
 package org.luun.kitchencontrolbev1.enums;
 
-public enum ReceiptStatus {
+public enum DeliveryStatus {
     DRAFT,
-    COMPLETED,
+    WAITING,
+    DELIVERING,
+    DONE,
     CANCELED
 }

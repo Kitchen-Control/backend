@@ -10,8 +10,8 @@ import org.luun.kitchencontrolbev1.entity.Delivery;
 import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.OrderDetail;
 import org.luun.kitchencontrolbev1.entity.User;
+import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
-import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 import org.luun.kitchencontrolbev1.repository.DeliveryRepository;
 import org.luun.kitchencontrolbev1.repository.OrderRepository;
 import org.luun.kitchencontrolbev1.repository.UserRepository;
@@ -65,6 +65,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         delivery.setShipper(shipper);
         delivery.setDeliveryDate(request.getDeliveryDate());
         delivery.setCreatedAt(LocalDateTime.now());
+        delivery.setStatus(DeliveryStatus.WAITING);
 
         List<Order> orders = orderRepository.findAllById(request.getOrderIds());
         if (orders.size() != request.getOrderIds().size()) {
@@ -74,7 +75,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         deliveryRepository.save(delivery);
 
         for (Order order : orders) {
-            if (order.getStatus() == OrderStatus.WAITTING) {
+            if (order.getStatus() == OrderStatus.WAITING) {
                 order.setDelivery(delivery);
                 order.setStatus(OrderStatus.PROCESSING); // Chuyển sang PROCESSING
 
@@ -94,26 +95,61 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Transactional
     // Bước 4: Giao hàng (Shipping) - App shipper bấm "Nhận và giao"
     public DeliveryResponse startDelivery(Integer deliveryId) {
+        return updateDeliveryStatus(deliveryId, DeliveryStatus.DELIVERING);
+    }
+
+    @Override
+    @Transactional
+    public DeliveryResponse updateDeliveryStatus(Integer deliveryId, DeliveryStatus status) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
 
+        // Validate status transition (Optional but recommended)
+        // validateDeliveryStatusTransition(delivery.getStatus(), status);
+
+        switch (status) {
+            case DELIVERING:
+                handleDeliveryStart(delivery);
+                break;
+            case DONE:
+                handleDeliveryDone(delivery);
+                break;
+            default:
+                break;
+        }
+
+        delivery.setStatus(status);
+        return mapToResponse(deliveryRepository.save(delivery));
+    }
+
+    private void handleDeliveryStart(Delivery delivery) {
         List<Order> orders = delivery.getOrders();
-        // Kiểm tra xem có order nào để đi giao không
         if (orders == null || orders.isEmpty()) {
             throw new RuntimeException("Delivery does not contain any orders");
         }
 
-        // Tự động chuyển các đơn thuộc chuyến đó orders.status -> DELIVERING
         for (Order order : orders) {
+            // Chỉ cho phép bắt đầu giao khi đơn hàng đã được xuất kho (DISPATCHED)
             if (order.getStatus() == OrderStatus.DISPATCHED) {
                 order.setStatus(OrderStatus.DELIVERING);
+                orderRepository.save(order);
             } else {
                 throw new RuntimeException(
-                        "Order " + order.getOrderId() + " is not ready for delivery (Not PROCESSING).");
+                        "Order " + order.getOrderId() + " is not ready for delivery (Current status: " + order.getStatus() + "). Must be DISPATCHED.");
             }
         }
+    }
 
-        return mapToResponse(deliveryRepository.save(delivery));
+    private void handleDeliveryDone(Delivery delivery) {
+        List<Order> orders = delivery.getOrders();
+        if (orders != null) {
+            for (Order order : orders) {
+                if (order.getStatus() == OrderStatus.DELIVERING) {
+                    order.setStatus(OrderStatus.DONE);
+                    orderRepository.save(order);
+                }
+            }
+        }
     }
 
     private DeliveryResponse mapToResponse(Delivery delivery) {
@@ -121,6 +157,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         response.setDeliveryId(delivery.getDeliveryId());
         response.setDeliveryDate(delivery.getDeliveryDate());
         response.setCreatedAt(delivery.getCreatedAt());
+        response.setStatus(delivery.getStatus());
 
         if (delivery.getShipper() != null) {
             response.setShipperId(delivery.getShipper().getUserId());

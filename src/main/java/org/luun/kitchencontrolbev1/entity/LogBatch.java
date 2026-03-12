@@ -41,11 +41,11 @@ public class LogBatch {
     private LocalDate expiryDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "log_batches_enum")
+    @Column(name = "status", columnDefinition = "log_batches_enum", updatable = false)
     private LogBatchStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", columnDefinition = "log_batches_type")
+    @Column(name = "type", columnDefinition = "log_batches_type", updatable = false)
     private LogBatchType type;
 
     @Column(name = "created_at")

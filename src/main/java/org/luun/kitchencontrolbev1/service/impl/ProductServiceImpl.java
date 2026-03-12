@@ -38,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("Invalid product type: " + productType);
         }
 
-        List<Product> products = productRepository.findByProductType(type);
+        List<Product> products = productRepository.findByProductType(type.name());
         return products.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

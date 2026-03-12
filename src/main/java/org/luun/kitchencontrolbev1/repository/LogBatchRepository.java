@@ -14,11 +14,21 @@ public interface LogBatchRepository extends JpaRepository<LogBatch, Integer> {
 
     List<LogBatch> findByProduct_ProductId(Integer productId);
 
-    List<LogBatch> findByStatus(LogBatchStatus status);
+    @Query(value = "SELECT * FROM log_batches lb WHERE lb.status::text = :status", nativeQuery = true)
+    List<LogBatch> findByStatus(@Param("status") String status);
 
-    @Query("SELECT lb FROM LogBatch lb WHERE lb.expiryDate < :today AND lb.status IN :statuses")
+    //    @Query("SELECT lb FROM LogBatch lb WHERE lb.expiryDate < :today AND lb.status IN :statuses")
+//    List<LogBatch> findByExpiryDateBeforeAndStatusIn(
+//            @Param("today") LocalDate today,
+//            @Param("statuses") List<LogBatchStatus> statuses
+//    );
+    @Query(value = "SELECT * FROM log_batches lb " +
+            "JOIN inventories i ON i.batch_id = lb.batch_id " +
+            "WHERE lb.expiry_date < :today " +
+            "AND lb.status::text IN (:statuses)" +
+            "AND i.quantity > 0", nativeQuery = true)
     List<LogBatch> findByExpiryDateBeforeAndStatusIn(
             @Param("today") LocalDate today,
-            @Param("statuses") List<LogBatchStatus> statuses
+            @Param("statuses") List<String> statuses
     );
 }

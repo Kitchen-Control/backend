@@ -72,7 +72,7 @@ public class  OrderDetailFillServiceImpl implements OrderDetailFillService {
 
         // Chỉ xem xét các đơn hàng đang ở trạng thái WAITTING hoặc PROCESSING để tính
         // toán số lượng "Đã giữ chỗ"
-        List<OrderStatus> statuses = Arrays.asList(OrderStatus.WAITTING, OrderStatus.PROCESSING);
+        List<OrderStatus> statuses = Arrays.asList(OrderStatus.WAITING, OrderStatus.PROCESSING);
 
         // Duyệt qua từng món hàng mà cửa hàng đặt (OrderDetail)
         for (OrderDetail detail : order.getOrderDetails()) {

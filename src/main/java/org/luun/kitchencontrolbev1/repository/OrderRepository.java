@@ -1,6 +1,7 @@
 package org.luun.kitchencontrolbev1.repository;
 
 import org.luun.kitchencontrolbev1.entity.Order;
+import org.luun.kitchencontrolbev1.entity.Receipt;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findByStatus(OrderStatus orderStatus);
 
     List<Order> findByDelivery_Shipper_UserId(Integer shipperId);
+
+    Order findByReceipts_ReceiptId(Integer receiptId);
 }

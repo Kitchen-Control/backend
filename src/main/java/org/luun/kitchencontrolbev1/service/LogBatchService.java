@@ -22,4 +22,6 @@ public interface LogBatchService {
     LogBatchResponse createPurchaseLogBatch(LogBatchRequest request);
 
     LogBatchResponse updateLogBatchStatus(Integer batchId, LogBatchStatus status);
+
+    void expireLogBatch(Integer batchId);
 }

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.dto.request.AssignShipperRequest;
 import org.luun.kitchencontrolbev1.dto.response.DeliveryResponse;
-import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
+import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
 import org.luun.kitchencontrolbev1.service.DeliveryService;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,14 +31,6 @@ public class DeliveryController {
         return deliveryService.getDeliveriesByShipperId(shipperId);
     }
 
-    // @PatchMapping("/{deliveryId}/assign-shipper/{shipperId}")
-    // @Operation(summary = "Assign a shipper to a delivery")
-    // public DeliveryResponse assignShipperToDelivery(
-    // @PathVariable Integer deliveryId,
-    // @PathVariable Integer shipperId) {
-    // return deliveryService.assignShipperToDelivery(deliveryId, shipperId);
-    // }
-
     @PostMapping("/create")
     @Operation(summary = "Create delivery and assign orders, shipper to it")
     public DeliveryResponse createDelivery(@RequestBody AssignShipperRequest assignShipperRequest) {
@@ -49,5 +41,13 @@ public class DeliveryController {
     @Operation(summary = "Shipper starts the delivery trip -> Orders status becomes DELIVERING")
     public DeliveryResponse startDelivery(@PathVariable Integer deliveryId) {
         return deliveryService.startDelivery(deliveryId);
+    }
+
+    @PatchMapping("/{deliveryId}/status")
+    @Operation(summary = "Update delivery status (WAITING -> DELIVERING -> DONE)")
+    public DeliveryResponse updateDeliveryStatus(
+            @PathVariable Integer deliveryId,
+            @RequestParam DeliveryStatus status) {
+        return deliveryService.updateDeliveryStatus(deliveryId, status);
     }
 }
