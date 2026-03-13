@@ -4,4 +4,5 @@ import org.luun.kitchencontrolbev1.entity.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StoreRepository extends JpaRepository<Store, Integer> {
+    Store findByOrders_OrderId(Integer orderId);
 }

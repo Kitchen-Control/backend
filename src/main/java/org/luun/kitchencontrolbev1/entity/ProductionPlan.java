@@ -39,7 +39,6 @@ public class ProductionPlan {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "productionPlan", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<ProductionPlanDetail> productionPlanDetails;
     private List<ProductionPlanDetail> productionPlanDetails = new ArrayList<>();
 
     @JsonManagedReference

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -44,7 +45,7 @@ public class Order {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderDetail> orderDetails;
+    private List<OrderDetail> orderDetails  = new ArrayList<>();
 
     @JsonManagedReference
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -52,5 +53,17 @@ public class Order {
 
     @JsonManagedReference
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Receipt receipts;
+    private Receipt receipt;
+
+    public void addDetail(Product product, float quantity) {
+
+        OrderDetail detail = new OrderDetail();
+
+        detail.setProduct(product);
+        detail.setQuantity(quantity);
+        detail.setOrder(this);
+
+        this.orderDetails.add(detail);
+    }
+
 }

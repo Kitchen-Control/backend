@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Or;
 import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
+import org.luun.kitchencontrolbev1.dto.request.OrderStatusUpdateRequest;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.luun.kitchencontrolbev1.service.OrderService;
@@ -50,15 +51,9 @@ public class OrderController {
         return orderService.createOrder(request);
     }
 
-    @PatchMapping("/update-status/{storeId}")
-    @Operation(summary = "Update order status")
-    public OrderResponse updateOrderStatus(@RequestParam Integer orderId, @RequestParam("status") OrderStatus status) {
-        return orderService.updateOrderStatus(orderId, status);
-    }
-
-    @PatchMapping("/{orderId}/complete")
-    @Operation(summary = "Complete the order (mark as DONE)")
-    public OrderResponse completeOrder(@PathVariable Integer orderId) {
-        return orderService.completeOrder(orderId);
+    @PatchMapping("/update-status")
+    @Operation(summary = "Update orders status")
+    public void updateOrderStatus(@RequestBody OrderStatusUpdateRequest request) {
+        orderService.updateOrderStatus(request.getOrderIds(), request.getStatus());
     }
 }

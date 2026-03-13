@@ -10,5 +10,5 @@ public interface ReceiptService {
     List<ReceiptResponse> getByStatus(ReceiptStatus status);
     ReceiptResponse createReceipt(Integer orderId, String note);
     void confirmReceipt(List<Integer> receiptId);
-    ReceiptResponse updateReceiptStatus(Integer receiptId, ReceiptStatus status);
+    void updateReceiptStatus(List<Integer> receiptIds, ReceiptStatus status);
 }

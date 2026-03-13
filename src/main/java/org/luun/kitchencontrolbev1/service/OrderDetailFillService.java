@@ -1,6 +1,9 @@
 package org.luun.kitchencontrolbev1.service;
 
 import org.luun.kitchencontrolbev1.dto.response.OrderDetailFillResponse;
+import org.luun.kitchencontrolbev1.entity.Order;
+import org.luun.kitchencontrolbev1.entity.OrderDetailFill;
+
 import java.util.List;
 
 public interface OrderDetailFillService {
@@ -12,5 +15,7 @@ public interface OrderDetailFillService {
 
     List<OrderDetailFillResponse> getOrderDetailFillsByBatchId(Integer batchId);
 
-    void autoAllocateFEFO(Integer orderId);
+    List<OrderDetailFill> getOrderDetailFillsByOrderId(Integer orderId);
+
+    void autoAllocateFEFO(Order order);
 }

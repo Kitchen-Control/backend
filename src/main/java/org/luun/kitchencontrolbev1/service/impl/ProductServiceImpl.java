@@ -45,6 +45,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Product getProductById(Integer productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id " + productId));
+    }
+
+    @Override
     public ProductResponse createProduct(ProductRequest request) {
         Product product = new Product();
         product.setProductName(request.getProductName());
@@ -58,8 +64,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse updateProduct(Integer productId, Product updatedProduct) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id " + productId));
+        Product product = getProductById(productId);
 
         product.setProductName(updatedProduct.getProductName());
         product.setProductType(updatedProduct.getProductType());

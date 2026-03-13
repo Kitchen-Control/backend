@@ -27,7 +27,7 @@ public class UserController {
     @GetMapping("/{userId}")
     @Operation(summary = "Get user by ID")
     public UserResponse getUserById(@PathVariable Integer userId) {
-        return userService.getUserById(userId);
+        return userService.getUserResponseById(userId);
     }
 
     @PostMapping

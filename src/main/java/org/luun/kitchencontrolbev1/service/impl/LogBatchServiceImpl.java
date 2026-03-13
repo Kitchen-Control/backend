@@ -1,14 +1,16 @@
 package org.luun.kitchencontrolbev1.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.luun.kitchencontrolbev1.dto.request.LogBatchRequest;
 import org.luun.kitchencontrolbev1.dto.response.LogBatchResponse;
 import org.luun.kitchencontrolbev1.entity.*;
-import org.luun.kitchencontrolbev1.enums.InventoryTransactionType;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.enums.LogBatchType;
 import org.luun.kitchencontrolbev1.repository.*;
-import org.luun.kitchencontrolbev1.service.LogBatchService;
+import org.luun.kitchencontrolbev1.service.*;
+import org.luun.kitchencontrolbev1.service.statustransitionhandler.LogBatchStatusTransitionHandler;
+import org.luun.kitchencontrolbev1.service.statusvalidator.LogBatchStatusValidator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,18 +18,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class LogBatchServiceImpl implements LogBatchService {
 
+    private final ReportRepository reportRepository;
+    private final ProductionPlanService productionPlanService;
+    private final ProductService productService;
+
     private final LogBatchRepository logBatchRepository;
-    private final ProductionPlanRepository productionPlanRepository;
-    private final ProductRepository productRepository;
-    private final InventoryRepository inventoryRepository;
-    private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final LogBatchStatusValidator logBatchStatusValidator;
+    private final LogBatchStatusTransitionHandler logBatchStatusTransitionHandler;
 
     @Override
     public List<LogBatchResponse> getAllLogBatches() {
@@ -41,6 +45,12 @@ public class LogBatchServiceImpl implements LogBatchService {
         LogBatch logBatch = logBatchRepository.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("LogBatch not found with id: " + batchId));
         return mapToResponse(logBatch);
+    }
+
+    @Override
+    public LogBatch getLogBatchEntityById(Integer batchId) {
+        return logBatchRepository.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("LogBatch not found"));
     }
 
     @Override
@@ -70,17 +80,11 @@ public class LogBatchServiceImpl implements LogBatchService {
         LogBatch logBatch = new LogBatch();
 
         // 1. Gắn Production Plan
-        if (request.getPlanId() != null) {
-            ProductionPlan plan = productionPlanRepository.findById(request.getPlanId())
-                    .orElseThrow(() -> new RuntimeException("Production Plan not found with id: " + request.getPlanId()));
-            logBatch.setPlan(plan);
-        } else {
-            throw new RuntimeException("Plan ID is required for PRODUCTION type");
-        }
+        ProductionPlan plan = productionPlanService.getProductionPlanEntityById(request.getPlanId());
+        logBatch.setPlan(plan);
 
         // 2. Gắn Product
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + request.getProductId()));
+        Product product = productService.getProductById(request.getProductId());
         logBatch.setProduct(product);
 
         // 3. Set các thuộc tính khác
@@ -106,8 +110,7 @@ public class LogBatchServiceImpl implements LogBatchService {
         LogBatch logBatch = new LogBatch();
 
         // Gắn Product
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + request.getProductId()));
+        Product product = productService.getProductById(request.getProductId());
         logBatch.setProduct(product);
 
         // Set các thuộc tính khác
@@ -115,7 +118,7 @@ public class LogBatchServiceImpl implements LogBatchService {
         logBatch.setProductionDate(request.getProductionDate());
         logBatch.setExpiryDate(request.getExpiryDate());
         logBatch.setCreatedAt(LocalDateTime.now());
-        logBatch.setStatus(LogBatchStatus.DONE);
+        logBatch.setStatus(LogBatchStatus.WAITING_TO_CONFIRM);
 
         if (request.getType() == null || request.getType() != LogBatchType.PURCHASE) {
             throw new RuntimeException("Type is required or must be PURCHASE");
@@ -124,123 +127,67 @@ public class LogBatchServiceImpl implements LogBatchService {
         logBatch.setType(request.getType());
         LogBatch savedBatch = logBatchRepository.save(logBatch);
 
-        handleBatchDone(savedBatch);
+        updateLogBatchStatus(savedBatch.getBatchId(), LogBatchStatus.DONE);
 
         return mapToResponse(savedBatch);
     }
 
     @Override
     @Transactional
-    public LogBatchResponse updateLogBatchStatus(Integer batchId, LogBatchStatus newStatus) {
-        // 1. Lấy LogBatch từ DB
-        LogBatch logBatch = logBatchRepository.findById(batchId)
-                .orElseThrow(() -> new RuntimeException("LogBatch not found"));
+    public void updateLogBatchStatus(Integer batchId, LogBatchStatus newStatus) {
 
-        // 2. Kiểm tra logic chuyển đổi trạng thái
-        if(!validateStatusTransition(logBatch.getStatus(), newStatus)) {
-            throw new RuntimeException("Invalid status transition");
-        }
+        LogBatch logBatch = getLogBatchEntityById(batchId);
 
-        // 3. Xử lý logic riêng cho từng trạng thái
-        switch (newStatus) {
-            case DONE:
-                handleBatchDone(logBatch);
-                break;
-            case DAMAGED:
-                handleBatchDamaged(logBatch);
-                break;
-            default:
-                // Các trạng thái khác chỉ cần update status bình thường
-                break;
-        }
+        logBatchStatusValidator.validate(logBatch.getStatus(), newStatus);
 
-        // 4. Cập nhật status và lưu
+        logBatchStatusTransitionHandler.handle(logBatch, newStatus);
+
         logBatch.setStatus(newStatus);
-        return mapToResponse(logBatchRepository.save(logBatch));
     }
 
-    private Boolean validateStatusTransition(LogBatchStatus currentStatus, LogBatchStatus newStatus) {
-
-        // handle DAMAGED status
-        if (currentStatus == LogBatchStatus.DAMAGED) {
-            throw new IllegalStateException("Cannot change status from " + currentStatus);
-        }
-
-        // handle PROCESSING status
-        if (currentStatus == LogBatchStatus.PROCESSING
-                && (newStatus == LogBatchStatus.DONE || newStatus == LogBatchStatus.DAMAGED)) {
-            throw new IllegalStateException("Cannot change status from PROCESSING to DONE or DAMAGED");
-        }
-
-        // handle DONE status
-        if (currentStatus == LogBatchStatus.DONE && newStatus != LogBatchStatus.WAITING_TO_CANCEL) {
-            throw new IllegalStateException("Cannot change status from DONE to " + newStatus);
-        }
-
-        // handle WAITING_TO_CONFIRM status
-        if (currentStatus == LogBatchStatus.WAITING_TO_CONFIRM && newStatus != LogBatchStatus.DONE) {
-            throw new IllegalStateException("Cannot change status from WAITING_TO_CONFIRM to " + newStatus);
-        }
-
-        // handle WAITING_TO_CANCLE status
-        if (currentStatus == LogBatchStatus.DONE && newStatus != LogBatchStatus.WAITING_TO_CANCEL) {
-            throw new IllegalStateException("Cannot change status from DONE to " + newStatus);
-        }
-
-        return true;
-    }
-
+    @Override
     @Transactional
-    protected void handleBatchDone(LogBatch logBatch) {
+    public void expireLogBatch(Integer batchId) {
+        // Finding LogBatch
+        LogBatch logBatch = getLogBatchEntityById(batchId);
 
-        // 1. Kiểm tra xem đã có Inventory cho lô này chưa (tránh cộng dồn 2 lần nếu lỡ bấm update 2 lần)
-        if (inventoryRepository.findByBatchBatchId(logBatch.getBatchId()).isPresent()) {
-            throw new RuntimeException("Inventory already exists for this batch"); // Hoặc throw exception tùy nghiệp vụ
-        }
+        updateLogBatchStatus(batchId, LogBatchStatus.DAMAGED);
 
-        // 2. Tạo Inventory mới
-        Inventory inventory = new Inventory();
-        inventory.setProduct(logBatch.getProduct());
-        inventory.setBatch(logBatch);
-        inventory.setQuantity(logBatch.getQuantity()); // Số lượng thực tế sản xuất
-        inventory.setExpiryDate(logBatch.getExpiryDate());
-        inventoryRepository.save(inventory);
-
-        // 3. Tạo Transaction log (Nhập kho từ sản xuất/hàng mua)
-        InventoryTransaction trans = new InventoryTransaction();
-        trans.setProduct(logBatch.getProduct());
-        trans.setBatch(logBatch);
-        trans.setType(InventoryTransactionType.IMPORT);
-        trans.setQuantity(logBatch.getQuantity());
-        trans.setCreatedAt(LocalDateTime.now());
-
-        inventoryTransactionRepository.save(trans);
+        // Creating report
+        Report report = new Report();
+        report.setReportType("WASTE");
+        report.setCreatedDate(LocalDateTime.now());
+        report.setUser(null);
+        reportRepository.save(report);
     }
 
+    /**
+     * This method is scheduled to run automatically to check for expired batches.
+     * It finds batches that are expired and not yet marked as WAITING_TO_CANCLE or EXPIRED,
+     * and updates their status to WAITING_TO_CANCLE.
+     */
+    @Scheduled(cron = "0 1 0  * * ?", zone = "Asia/Ho_Chi_Minh") // Runs every day at 1:00 AM and in Vietnam time
     @Transactional
-    protected void handleBatchDamaged(LogBatch logBatch) {
+    public void updateExpiredBatches() {
+        log.warn("Checking for expired batches...");
+        LocalDate today = LocalDate.now();
 
-        // 1. Kiểm tra xem đã có Inventory cho lô này chưa
-        Inventory inventory = inventoryRepository.findByBatchBatchId(logBatch.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Inventory not found for batch: " + logBatch.getBatchId()));
-
-        // 2. kiểm tra Inventory còn hàng k
-        if(!(inventory.getQuantity() > 0)) {
-            throw new RuntimeException("Inventory is empty");
+        // Find batches that are expired (expiry_date < today) and have a status that can be changed
+        // (e.g., DONE, PROCESSING). We don't want to change batches that are already handled.
+        List<LogBatch> expiredBatches = logBatchRepository.findByExpiryDateBeforeAndStatusIn(
+                today,
+                List.of(LogBatchStatus.DONE)
+        );
+        if(expiredBatches.isEmpty()) {
+            log.warn("No expired batches found.");
+            return;
         }
-
-        // 3. Tạo Transaction log (Xuất kho do hàng hết hạn hoặc hỏng)
-        InventoryTransaction trans = new InventoryTransaction();
-        trans.setProduct(logBatch.getProduct());
-        trans.setBatch(logBatch);
-        trans.setType(InventoryTransactionType.EXPORT);
-        trans.setQuantity(inventory.getQuantity());
-        trans.setCreatedAt(LocalDateTime.now());
-        trans.setNote("Hủy hàng");
-        inventoryTransactionRepository.save(trans);
-
-        inventory.setQuantity((float) 0);
-        inventoryRepository.save(inventory);
+        for (LogBatch batch : expiredBatches) {
+            batch.setStatus(LogBatchStatus.WAITING_TO_CANCEL);
+            logBatchRepository.save(batch);
+            // You might want to add logging here to record which batches were updated
+            log.warn("Batch ID " + batch.getBatchId() + " has expired and status updated to WAITING_TO_CANCLE.");
+        }
     }
 
     private LogBatchResponse mapToResponse(LogBatch batch) {

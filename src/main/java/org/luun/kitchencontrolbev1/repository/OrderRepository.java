@@ -4,6 +4,9 @@ import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.Receipt;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,4 +24,13 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findByDelivery_Shipper_UserId(Integer shipperId);
 
     Order findByReceipt_ReceiptId(Integer receiptId);
+
+    @Query("""
+            SELECT o FROM Order o 
+            WHERE o.orderId IN :ids 
+            AND o.delivery IS NULL
+            """)
+    List<Order> findAvailableOrders(List<Integer> ids);
+
+    List<Order> findByDelivery_DeliveryId(Integer deliveryId);
 }

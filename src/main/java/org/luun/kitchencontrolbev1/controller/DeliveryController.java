@@ -31,23 +31,17 @@ public class DeliveryController {
         return deliveryService.getDeliveriesByShipperId(shipperId);
     }
 
-    @PostMapping("/create")
+    @PostMapping("")
     @Operation(summary = "Create delivery and assign orders, shipper to it")
-    public DeliveryResponse createDelivery(@RequestBody AssignShipperRequest assignShipperRequest) {
-        return deliveryService.assignShipperToDelivery(assignShipperRequest);
-    }
-
-    @PatchMapping("/{deliveryId}/start")
-    @Operation(summary = "Shipper starts the delivery trip -> Orders status becomes DELIVERING")
-    public DeliveryResponse startDelivery(@PathVariable Integer deliveryId) {
-        return deliveryService.startDelivery(deliveryId);
+    public void createDelivery(@RequestBody AssignShipperRequest assignShipperRequest) {
+        deliveryService.createDelivery(assignShipperRequest);
     }
 
     @PatchMapping("/{deliveryId}/status")
-    @Operation(summary = "Update delivery status (WAITING -> DELIVERING -> DONE)")
-    public DeliveryResponse updateDeliveryStatus(
+    @Operation(summary = "Update delivery status (DRAFT -> WAITING -> DELIVERING)")
+    public void updateDeliveryStatus(
             @PathVariable Integer deliveryId,
             @RequestParam DeliveryStatus status) {
-        return deliveryService.updateDeliveryStatus(deliveryId, status);
+        deliveryService.updateDeliveryStatus(deliveryId, status);
     }
 }

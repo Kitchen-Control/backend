@@ -8,8 +8,8 @@ import org.luun.kitchencontrolbev1.dto.response.ProductionPlanResponse;
 import org.luun.kitchencontrolbev1.entity.Product;
 import org.luun.kitchencontrolbev1.entity.ProductionPlan;
 import org.luun.kitchencontrolbev1.entity.ProductionPlanDetail;
-import org.luun.kitchencontrolbev1.repository.ProductRepository;
 import org.luun.kitchencontrolbev1.repository.ProductionPlanRepository;
+import org.luun.kitchencontrolbev1.service.ProductService;
 import org.luun.kitchencontrolbev1.service.ProductionPlanService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class ProductionPlanServiceImpl implements ProductionPlanService {
 
     private final ProductionPlanRepository productionPlanRepository;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
     @Override
     public List<ProductionPlanResponse> getProductionPlans() {
@@ -36,6 +36,12 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
     @Override
     public ProductionPlanResponse getProductionPlanById(Integer id) {
         return mapToResponse(productionPlanRepository.findById(id).orElseThrow(() -> new RuntimeException("Production plan not found")));
+    }
+
+    @Override
+    public ProductionPlan getProductionPlanEntityById(Integer id) {
+        return productionPlanRepository.findById(id).
+                orElseThrow(() -> new RuntimeException("Production plan not found"));
     }
 
     @Override
@@ -53,8 +59,7 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         List<ProductionPlanDetail> productionPlanDetails = new ArrayList<>();
         if (request.getDetails() != null) {
             for (ProductionPlanDetailRequest detailRequest : request.getDetails()) {
-                Product product = productRepository.findById(detailRequest.getProductId())
-                        .orElseThrow(() -> new RuntimeException("Product not found with id: " + detailRequest.getProductId()));
+                Product product = productService.getProductById(detailRequest.getProductId());
 
 
                 ProductionPlanDetail detail = new ProductionPlanDetail();
@@ -76,7 +81,6 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
 
         return mapToResponse(savedPlan);
     }
-
 
     private ProductionPlanResponse mapToResponse(ProductionPlan productionPlan) {
         ProductionPlanResponse response = new ProductionPlanResponse();

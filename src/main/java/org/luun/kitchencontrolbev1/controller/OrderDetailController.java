@@ -20,6 +20,6 @@ public class OrderDetailController {
     @GetMapping("/order/{orderId}")
     @Operation(summary = "Get all order details by Order ID")
     public List<OrderDetailResponse> getByOrderId(@PathVariable Integer orderId) {
-        return orderDetailService.getByOrderId(orderId);
+        return orderDetailService.getDetailResponseByOrderId(orderId);
     }
 }

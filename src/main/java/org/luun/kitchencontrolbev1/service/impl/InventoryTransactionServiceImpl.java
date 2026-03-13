@@ -123,6 +123,34 @@ public class InventoryTransactionServiceImpl implements InventoryTransactionServ
         inventoryRepository.save(inventory);
     }
 
+    @Override
+    @Transactional
+    public InventoryTransaction createImportTransaction(LogBatch batch, String note) {
+        InventoryTransaction trans = new InventoryTransaction();
+
+        trans.setProduct(batch.getProduct());
+        trans.setBatch(batch);
+        trans.setType(InventoryTransactionType.IMPORT);
+        trans.setQuantity(batch.getQuantity());
+        trans.setCreatedAt(LocalDateTime.now());
+
+        return transactionRepository.save(trans);
+    }
+
+    @Override
+    @Transactional
+    public InventoryTransaction createExportTransaction(LogBatch batch, Float quantity, String note) {
+        InventoryTransaction trans = new InventoryTransaction();
+
+        trans.setProduct(batch.getProduct());
+        trans.setBatch(batch);
+        trans.setType(InventoryTransactionType.EXPORT);
+        trans.setQuantity(quantity);
+        trans.setCreatedAt(LocalDateTime.now());
+
+        return transactionRepository.save(trans);
+    }
+
     private InventoryTransactionResponse mapToResponse(InventoryTransaction transaction) {
         InventoryTransactionResponse response = new InventoryTransactionResponse();
         response.setTransactionId(transaction.getTransactionId());

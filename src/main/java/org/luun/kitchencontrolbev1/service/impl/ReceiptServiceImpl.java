@@ -5,22 +5,16 @@ import org.luun.kitchencontrolbev1.dto.response.InventoryTransactionResponse;
 import org.luun.kitchencontrolbev1.dto.response.ReceiptResponse;
 import org.luun.kitchencontrolbev1.entity.Receipt;
 import org.luun.kitchencontrolbev1.entity.Order;
-import org.luun.kitchencontrolbev1.entity.OrderDetailFill;
-import org.luun.kitchencontrolbev1.entity.Inventory;
 import org.luun.kitchencontrolbev1.entity.InventoryTransaction;
 import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
-import org.luun.kitchencontrolbev1.enums.InventoryTransactionType;
-import org.luun.kitchencontrolbev1.repository.OrderRepository;
 import org.luun.kitchencontrolbev1.repository.ReceiptRepository;
-import org.luun.kitchencontrolbev1.repository.OrderDetailFillRepository;
-import org.luun.kitchencontrolbev1.repository.InventoryRepository;
-import org.luun.kitchencontrolbev1.repository.InventoryTransactionRepository;
+import org.luun.kitchencontrolbev1.service.OrderService;
 import org.luun.kitchencontrolbev1.service.ReceiptService;
+import org.luun.kitchencontrolbev1.service.statustransitionhandler.ReceiptStatusTransitionHandler;
+import org.luun.kitchencontrolbev1.service.statusvalidator.ReceiptStatusValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +24,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReceiptServiceImpl implements ReceiptService {
 
+    private final OrderService orderService;
+
     private final ReceiptRepository receiptRepository;
-    private final OrderRepository orderRepository;
-    private final OrderDetailFillRepository orderDetailFillRepository;
-    private final InventoryRepository inventoryRepository;
-    private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final ReceiptStatusValidator receiptStatusValidation;
+    private final ReceiptStatusTransitionHandler receiptStatusTransitionHandler;
 
     @Override
     public List<ReceiptResponse> getByOrderId(Integer orderId) {
@@ -54,11 +48,11 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    @Transactional
     // Giai đoạn 3.2: Tạo Phiếu Xuất (Receipt Creation)
     // Thủ kho kiểm tra rồi ấn tạo phiếu
     public ReceiptResponse createReceipt(Integer orderId, String note) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        Order order = orderService.getOrderById(orderId);
 
         if (order.getStatus() != OrderStatus.PROCESSING) {
             throw new RuntimeException("Order status need to be PROCESSING");
@@ -71,114 +65,34 @@ public class ReceiptServiceImpl implements ReceiptService {
         receipt.setStatus(ReceiptStatus.DRAFT);
         receipt.setNote(note);
 
-        // Save the drafting phase
         Receipt savedReceipt = receiptRepository.save(receipt);
-
         return mapToResponse(savedReceipt);
     }
 
     @Override
     @Transactional
     // Giai đoạn 3.3: Xác nhận Xuất kho (Dispatched)
-    // Thủ kho bấm hoàn tất -> Cập nhật Phiếu -> Trừ thẳng kho
-    public void confirmReceipt(List<Integer> receiptId) { //Cofirm là chuyển trạng thái của receipt từ DRAFT thành COMPLETED
-        List<Receipt> receipts = receiptRepository.findAllById(receiptId);
-        if (receipts.isEmpty()) {
-            throw new RuntimeException("There is a receiptId which can not found");
-        }
-
-        for (Receipt receipt : receipts) {
-            if (receipt.getStatus() != ReceiptStatus.DRAFT) {
-                throw new RuntimeException("Can only confirm a DRAFT receipt");
-            }
-
-            // 1. Chuyển trạng thái Phiếu sang COMPLETED
-            receipt.setStatus(ReceiptStatus.COMPLETED);
-            receipt.setExportDate(LocalDateTime.now());
-
-            // Cập nhật trạng thái order sang DISPATCHED
-            Order order = receipt.getOrder();
-            order.setStatus(OrderStatus.DISPATCHED);
-            orderRepository.save(order);
-
-            // 2. Lấy ra danh sách các Lô hàng đã bị "giữ chỗ" lúc nãy cho Đơn hàng này
-            // Lưu ý: Cần lấy OrderDetailFill dựa trên Order của Receipt
-            List<OrderDetailFill> fills = orderDetailFillRepository
-                    .findByOrderDetail_Order_OrderId(receipt.getOrder().getOrderId());
-
-            // 3. Với từng cục hàng đã nhặt, tiến hành trừ kho thực tế và Lưu Log Lịch sử (Transaction)
-            for (OrderDetailFill fill : fills) {
-                // Lấy Lô hàng thực trong database (Inventory)
-                Inventory inv = inventoryRepository.findByBatchBatchId(fill.getBatch().getBatchId())
-                        .orElseThrow(() -> new RuntimeException(
-                                "Inventory not found for batch: " + fill.getBatch().getBatchId()));
-
-                // Trừ lượng hàng đã giữ chỗ
-                Float currentQuantity = inv.getQuantity();
-                Float quantityToExport = fill.getQuantity();
-
-                inv.setQuantity(currentQuantity - quantityToExport);
-                inventoryRepository.save(inv);
-
-                // Tạo Transaction Lịch sử Rút hàng (EXPORT)
-                InventoryTransaction transaction = new InventoryTransaction();
-                transaction.setProduct(fill.getOrderDetail().getProduct());
-                transaction.setBatch(fill.getBatch());
-                transaction.setType(InventoryTransactionType.EXPORT);
-                transaction.setQuantity(quantityToExport); //Số lượng xuất
-                transaction.setReceipt(receipt);
-                transaction.setCreatedAt(LocalDateTime.now());
-                transaction.setNote("Exported via Receipt: " + receipt.getReceiptCode());
-
-                inventoryTransactionRepository.save(transaction);
-            }
-            receiptRepository.save(receipt);
-        }
+    public void confirmReceipt(List<Integer> receiptIds) {
+        updateReceiptStatus(receiptIds, ReceiptStatus.COMPLETED);
     }
 
     @Override
     @Transactional
-    public ReceiptResponse updateReceiptStatus(Integer receiptId, ReceiptStatus newStatus) {
-        Receipt receipt = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
+    public void updateReceiptStatus(List<Integer> receiptIds, ReceiptStatus newStatus) {
+        List<Receipt> receipts = receiptRepository.findAllById(receiptIds);
 
-        validateStatusTransition(receipt.getStatus(), newStatus);
-
-        switch (newStatus) {
-            case CANCELED:
-                handleReceiptCancelled(receipt);
-                break;
-            default:
-                // Các trạng thái khác chỉ cần update status bình thường
-                break;
+        if (receipts.size() != receiptIds.size()) {
+            throw new RuntimeException("There is a receiptId which can not found");
         }
 
-        receipt.setStatus(newStatus);
-        Receipt updatedReceipt = receiptRepository.save(receipt);
+        for (Receipt receipt : receipts) {
 
-        return mapToResponse(updatedReceipt);
-    }
+            receiptStatusValidation.validate(receipt.getStatus(), newStatus);
 
-    private void validateStatusTransition(ReceiptStatus status, ReceiptStatus newStatus) {
+            receiptStatusTransitionHandler.handle(receipt, newStatus);
 
-        // handle DRAFT status
-        if(status == ReceiptStatus.CANCELED){
-            throw new IllegalStateException("Cannot change status from " + status);
+            receipt.setStatus(newStatus);
         }
-
-        // handle COMPLETED status
-
-
-    }
-
-    @Transactional
-    protected void handleReceiptCancelled(Receipt receipt) {
-        Order order = orderRepository.findByReceipt_ReceiptId(receipt.getReceiptId());
-
-        if(order == null) {
-            throw new IllegalStateException("Order not found for this receipt");
-        }
-
     }
 
     private ReceiptResponse mapToResponse(Receipt receipt) {

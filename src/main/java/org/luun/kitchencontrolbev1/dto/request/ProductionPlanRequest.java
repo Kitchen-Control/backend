@@ -2,6 +2,8 @@ package org.luun.kitchencontrolbev1.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.luun.kitchencontrolbev1.enums.ProductionPlanStatus;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -14,7 +16,7 @@ public class ProductionPlanRequest {
     LocalDate planDate;
     LocalDate startDate;
     LocalDate endDate;
-    String status;
+    ProductionPlanStatus status;
     String note;
     List<ProductionPlanDetailRequest> details;
 }

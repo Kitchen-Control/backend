@@ -9,6 +9,7 @@ import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -38,5 +39,16 @@ public class Delivery {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL)
-    private List<Order> orders;
+    private List<Order> orders = new ArrayList<>();
+
+    public void addOrder(Order order) {
+        order.setDelivery(this);
+        this.orders.add(order);
+    }
+
+    public void removeOrder(Order order){
+        orders.remove(order);
+        order.setDelivery(null);
+    }
+
 }

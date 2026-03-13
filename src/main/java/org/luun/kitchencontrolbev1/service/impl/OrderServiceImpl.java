@@ -7,24 +7,30 @@ import org.luun.kitchencontrolbev1.dto.response.OrderDetailFillResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderDetailResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.entity.*;
+import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.luun.kitchencontrolbev1.repository.*;
-import org.luun.kitchencontrolbev1.service.OrderService;
+import org.luun.kitchencontrolbev1.service.*;
+import org.luun.kitchencontrolbev1.service.statustransitionhandler.OrderStatusTransitionHandler;
+import org.luun.kitchencontrolbev1.service.statusvalidator.OrderStatusValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+
+    private final UserService userService;
+    private final ProductService productService;
+    private final StoreService storeService;
+
     private final OrderRepository orderRepository;
-    private final StoreRepository storeRepository;
-    private final ProductRepository productRepository;
-    private final UserRepository userRepository;
+    private final OrderStatusValidator orderStatusValidator;
+    private final OrderStatusTransitionHandler orderStatusTransitionHandler;
 
     @Override
     public List<OrderResponse> getOrders() {
@@ -32,6 +38,12 @@ public class OrderServiceImpl implements OrderService {
         return orders.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Order getOrderById(Integer orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
     }
 
     @Override
@@ -50,8 +62,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
         // 1. Find Store
-        Store store = storeRepository.findById(request.getStoreId())
-                .orElseThrow(() -> new RuntimeException("Store not found with id: " + request.getStoreId()));
+        Store store = storeService.getStoreById(request.getStoreId());
 
         // 2. Create Order object
         Order order = new Order();
@@ -60,54 +71,59 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.WAITING);
         order.setComment(request.getComment());
 
-        // 3. Create OrderDetail objects and set the bidirectional relationship
-        List<OrderDetail> orderDetails = new ArrayList<>();
+        // 3. Set the parent Order for the detail
         if (request.getOrderDetails() != null) {
             for (OrderDetailRequest detailRequest : request.getOrderDetails()) {
-                Product product = productRepository.findById(detailRequest.getProductId())
-                        .orElseThrow(() -> new RuntimeException(
-                                "Product not found with id: " + detailRequest.getProductId()));
 
-                OrderDetail detail = new OrderDetail();
-                detail.setProduct(product);
-                detail.setQuantity(detailRequest.getQuantity());
-                detail.setOrder(order); // Set the parent Order for the detail
+                Product product = productService.getProductById(detailRequest.getProductId());
 
-                orderDetails.add(detail);
+                order.addDetail(product, detailRequest.getQuantity());
             }
         }
 
-        // 4. Set the list of details on the order
-        order.setOrderDetails(orderDetails);
-
-        // 5. Save the Order (and thanks to Cascade, OrderDetails will be saved too)
+        // 4. Save the Order (and thanks to Cascade, OrderDetails will be saved too)
         Order savedOrder = orderRepository.save(order);
 
         return mapToResponse(savedOrder);
     }
 
     @Override
-    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus status) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        order.setStatus(status);
-        Order updatedOrder = orderRepository.save(order);
-        return mapToResponse(updatedOrder);
-    }
-
-    @Override
     @Transactional
-    // Bước 5: Nhận hàng (Completion) - Shipper bấm xác nhận hoàn thành
-    public OrderResponse completeOrder(Integer orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+    public void updateOrderStatus(List<Integer> ids, OrderStatus newStatus) {
+        List<Order> orders = orderRepository.findAllById(ids);
 
-        if (order.getStatus() != OrderStatus.DELIVERING) {
-            throw new RuntimeException("Can only complete an order that is currently DELIVERING");
+        if (orders.size() != ids.size()) {
+            throw new IllegalStateException("Some orders not exist");
         }
 
-        order.setStatus(OrderStatus.DONE);
-        return mapToResponse(orderRepository.save(order));
+        for (Order order : orders) {
+            // 1 validate transition
+            orderStatusValidator.validate(order.getStatus(), newStatus);
+
+            // 2 run business logic
+            orderStatusTransitionHandler.handle(order, newStatus);
+
+            // 3 update status
+            order.setStatus(newStatus);
+
+            Delivery delivery = order.getDelivery();
+            if (delivery != null) {
+                checkDeliveryCompletion(delivery);
+            }
+        }
+    }
+
+    private void checkDeliveryCompletion(Delivery delivery) {
+
+        boolean allFinished = delivery.getOrders().stream()
+                .allMatch(o ->
+                        o.getStatus() == OrderStatus.DONE ||
+                                o.getStatus() == OrderStatus.DAMAGED
+                );
+
+        if (allFinished) {
+            delivery.setStatus(DeliveryStatus.DONE);
+        }
     }
 
     @Override
@@ -120,8 +136,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderResponse> getOrdersByShipperId(Integer shipperId) {
-        User user = userRepository.findById(shipperId)
-                .orElseThrow(() -> new RuntimeException("Shipper not found with id: " + shipperId));
+
+        User user = userService.getUserById(shipperId);
+
         if (!user.getRole().getRoleName().equals("SHIPPER")) {
             throw new RuntimeException("User is not a shipper");
         }
@@ -184,12 +201,8 @@ public class OrderServiceImpl implements OrderService {
         if (detail.getOrderDetailFills() != null) {
             List<OrderDetailFillResponse> fills = detail.getOrderDetailFills().stream()
                     .map(this::mapToFillResponse)
-                            .collect(Collectors.toList());
+                    .collect(Collectors.toList());
             response.setOrderDetailFills(fills);
-
-//            List<OrderDetailFillResponse> fills = detail.getOrderDetailFills().stream()
-//                    .map(fill -> mapToFillResponse(fill))
-//                    .collect(Collectors.toList());
         }
 
         response.setQuantity(detail.getQuantity());

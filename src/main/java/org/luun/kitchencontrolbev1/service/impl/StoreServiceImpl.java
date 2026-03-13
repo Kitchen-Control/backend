@@ -25,9 +25,14 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public StoreResponse getStoreById(Integer id) {
+    public StoreResponse getStoreResponseById(Integer id) {
         Store store = storeRepository.findById(id).orElseThrow(() -> new RuntimeException("Store not found with id: " + id));
         return mapToResponse(store);
+    }
+
+    @Override
+    public Store getStoreById(Integer id) {
+        return storeRepository.findById(id).orElseThrow(() -> new RuntimeException("Store not found with id: " + id));
     }
 
     @Override

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.mapping.ToOne;
 import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -41,5 +41,10 @@ public class Receipt {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "receipt", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<InventoryTransaction> inventoryTransactions;
+    private List<InventoryTransaction> inventoryTransactions  = new ArrayList<>();
+
+    public void addInventoryTransaction(InventoryTransaction transaction) {
+        inventoryTransactions.add(transaction);
+        transaction.setReceipt(this);
+    }
 }

@@ -2,6 +2,7 @@ package org.luun.kitchencontrolbev1.service;
 
 import org.luun.kitchencontrolbev1.dto.response.InventoryResponse;
 import org.luun.kitchencontrolbev1.entity.Inventory;
+import org.luun.kitchencontrolbev1.entity.LogBatch;
 
 import java.util.List;
 
@@ -11,4 +12,8 @@ public interface InventoryService {
     InventoryResponse getInventoryById(Integer inventoryId);
 
     Float getAvailableStock(Integer productId);
+
+    Inventory getInventoryByBatchId(Integer batchId);
+
+    Inventory createInventoryFromBatch(LogBatch batch);
 }

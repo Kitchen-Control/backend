@@ -17,11 +17,16 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     private final OrderDetailRepository orderDetailRepository;
 
     @Override
-    public List<OrderDetailResponse> getByOrderId(Integer orderId) {
+    public List<OrderDetailResponse> getDetailResponseByOrderId(Integer orderId) {
         List<OrderDetail> orderDetails = orderDetailRepository.findByOrder_OrderId(orderId);
         return orderDetails.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrderDetail> getDetailsByOrderId(Integer orderId) {
+        return orderDetailRepository.findByOrder_OrderId(orderId);
     }
 
     private OrderDetailResponse mapToResponse(OrderDetail detail) {

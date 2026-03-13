@@ -32,10 +32,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getUserById(Integer userId) {
+    public UserResponse getUserResponseById(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         return mapToResponse(user);
+    }
+
+    @Override
+    public User getUserById(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
 
     @Override
@@ -75,7 +81,7 @@ public class UserServiceImpl implements UserService {
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
         }
-        
+
         // Only update password if provided and not empty
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             user.setPassword(request.getPassword()); // Should be encoded

@@ -6,8 +6,8 @@ import org.luun.kitchencontrolbev1.dto.response.QualityFeedbackResponse;
 import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.QualityFeedback;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
-import org.luun.kitchencontrolbev1.repository.OrderRepository;
 import org.luun.kitchencontrolbev1.repository.QualityFeedbackRepository;
+import org.luun.kitchencontrolbev1.service.OrderService;
 import org.luun.kitchencontrolbev1.service.QualityFeedbackService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class QualityFeedbackServiceImpl implements QualityFeedbackService {
 
     private final QualityFeedbackRepository feedbackRepository;
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
     @Override
     public List<QualityFeedbackResponse> getAllFeedbacks() {
@@ -34,8 +34,7 @@ public class QualityFeedbackServiceImpl implements QualityFeedbackService {
     @Transactional
     public QualityFeedbackResponse createFeedback(QualityFeedbackRequest request) {
         // 1. Validate Order
-        Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + request.getOrderId()));
+        Order order = orderService.getOrderById(request.getOrderId());
 
         // 2. Check if feedback already exists for this order
         if (order.getQualityFeedback() != null) {

@@ -22,10 +22,9 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class  OrderDetailFillServiceImpl implements OrderDetailFillService {
+public class OrderDetailFillServiceImpl implements OrderDetailFillService {
 
     private final OrderDetailFillRepository orderDetailFillRepository;
-    private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
 
     @Override
@@ -57,22 +56,20 @@ public class  OrderDetailFillServiceImpl implements OrderDetailFillService {
     }
 
     @Override
+    public List<OrderDetailFill> getOrderDetailFillsByOrderId(Integer orderId) {
+        return orderDetailFillRepository.findByOrderDetail_Order_OrderId(orderId);
+    }
+
+    @Override
     @Transactional
     // Giai đoạn 3.1: Phân bổ tự động (Allocation - Logic FEFO)
     // Hệ thống duyệt từng chi tiết đơn hàng (OrderDetail) để giữ chỗ trong các Lô
     // hàng (Batch) theo nguyên tắc Hạn dùng gần nhất (FEFO).
-    public void autoAllocateFEFO(Integer orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-
-        //Kiểm tra nếu đơn hàng này không có chi tiết nào thì không cần làm gì cả, thoát luôn khỏi hàm
-        if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
-            return;
-        }
+    public void autoAllocateFEFO(Order order) {
 
         // Chỉ xem xét các đơn hàng đang ở trạng thái WAITTING hoặc PROCESSING để tính
         // toán số lượng "Đã giữ chỗ"
-        List<OrderStatus> statuses = Arrays.asList(OrderStatus.WAITTING, OrderStatus.PROCESSING);
+        List<OrderStatus> statuses = Arrays.asList(OrderStatus.WAITING, OrderStatus.PROCESSING);
 
         // Duyệt qua từng món hàng mà cửa hàng đặt (OrderDetail)
         for (OrderDetail detail : order.getOrderDetails()) {

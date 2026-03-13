@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.dto.request.StoreRequest;
+import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.dto.response.StoreResponse;
 import org.luun.kitchencontrolbev1.entity.Store;
+import org.luun.kitchencontrolbev1.service.OrderService;
 import org.luun.kitchencontrolbev1.service.StoreService;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +29,8 @@ public class StoreController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get store by ID", description = "Retrieves a specific store by its ID.")
-    public StoreResponse getStoreById(@PathVariable Integer id) {
-        return storeService.getStoreById(id);
+    public StoreResponse getStoreResponseById(@PathVariable Integer id) {
+        return storeService.getStoreResponseById(id);
     }
 
     // Create a new store

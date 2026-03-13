@@ -5,5 +5,5 @@ public enum DeliveryStatus {
     WAITING,
     DELIVERING,
     DONE,
-    CANCELED
+    CANCEL
 }

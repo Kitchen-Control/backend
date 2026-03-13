@@ -9,6 +9,7 @@ import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.enums.LogBatchType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -57,9 +58,14 @@ public class LogBatch {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL)
-    private List<InventoryTransaction> inventoryTransactions;
+    private List<InventoryTransaction> inventoryTransactions  = new ArrayList<>();
 
     @JsonManagedReference
     @OneToMany(mappedBy = "batch")
-    private List<OrderDetailFill> orderDetailFills;
+    private List<OrderDetailFill> orderDetailFills  = new ArrayList<>();
+
+    public void addInventoryTransaction(InventoryTransaction transaction) {
+        inventoryTransactions.add(transaction);
+        transaction.setBatch(this);
+    }
 }
