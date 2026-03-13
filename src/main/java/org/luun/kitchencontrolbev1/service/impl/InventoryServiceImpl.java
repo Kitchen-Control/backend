@@ -95,6 +95,13 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    @Override
+    public List<InventoryResponse> getInventoryByproductType(String productType) {
+        return inventoryRepository.findByProductType(productType).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     private InventoryResponse mapToResponse(Inventory inventory) {
         InventoryResponse response = new InventoryResponse();
         response.setInventoryId(inventory.getInventoryId());

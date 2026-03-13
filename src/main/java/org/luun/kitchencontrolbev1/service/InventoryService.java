@@ -13,4 +13,6 @@ public interface InventoryService {
     Float getAvailableStock(Integer productId);
 
     void decreaseProductQuantity(Integer productId, float quantity);
+
+    List<InventoryResponse> getInventoryByproductType(String productType);
 }

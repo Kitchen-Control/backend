@@ -33,7 +33,7 @@ public class ReceiptController {
     @PostMapping("/order/{orderId}")
     @Operation(summary = "Create a draft receipt for an order")
     public ReceiptResponse createReceipt(
-            @PathVariable Integer orderId,
+            @PathVariable("orderId") Integer orderId,
             @RequestParam(required = false) String note) {
         return receiptService.createReceipt(orderId, note);
     }

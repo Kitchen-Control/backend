@@ -26,4 +26,9 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     List<Inventory> findValidInventoriesForProductOrderByExpiryDateAsc(@Param("productId") Integer productId);
 
     List<Inventory> findByProductOrderByExpiryDateAsc(Product product);
+
+    @Query(value = "SELECT i.* FROM inventories i " +
+            "JOIN products p ON i.product_id = p.product_id " +
+            "WHERE p.product_type::text = :productType", nativeQuery = true)
+    List<Inventory> findByProductType(@Param("productType") String productType);
 }

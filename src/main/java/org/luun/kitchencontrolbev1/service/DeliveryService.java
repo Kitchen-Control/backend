@@ -12,6 +12,8 @@ public interface DeliveryService {
 
     List<DeliveryResponse> getDeliveriesByShipperId(Integer shipperId);
 
+    List<DeliveryResponse> getDeliveriesByStatus(DeliveryStatus status);
+
     DeliveryResponse assignShipperToDelivery(AssignShipperRequest request);
 
     DeliveryResponse startDelivery(Integer deliveryId);

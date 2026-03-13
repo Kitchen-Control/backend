@@ -259,6 +259,7 @@ public class LogBatchServiceImpl implements LogBatchService {
             log.warn("Batch ID " + batch.getBatchId() + " has expired and status updated to WAITING_TO_CANCLE.");
         }
     }
+
     @Transactional
     protected void handleBatchDone(LogBatch logBatch) {
 

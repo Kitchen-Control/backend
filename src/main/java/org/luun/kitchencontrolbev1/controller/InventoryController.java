@@ -1,5 +1,6 @@
 package org.luun.kitchencontrolbev1.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.dto.response.InventoryResponse;
@@ -28,5 +29,11 @@ public class InventoryController {
     @GetMapping("/get-by-id/{inventoryId}")
     public InventoryResponse getInventoryById(@PathVariable Integer inventoryId) {
         return inventoryService.getInventoryById(inventoryId);
+    }
+
+    @GetMapping("/get-by-product-type/{productType}")
+    @Operation(summary = "Get all inventories by Product Type (RAW_MATERIAL, SEMI_FINISHED, FINISHED_PRODUCT)")
+    public List<InventoryResponse> getInventoryByproductType(@PathVariable("productType") String productType) {
+        return inventoryService.getInventoryByproductType(productType);
     }
 }

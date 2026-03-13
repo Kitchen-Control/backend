@@ -27,8 +27,14 @@ public class DeliveryController {
 
     @GetMapping("/get-by-shipper/{shipperId}")
     @Operation(summary = "Get deliveries by shipper ID")
-    public List<DeliveryResponse> getDeliveriesByShipperId(@PathVariable Integer shipperId) {
+    public List<DeliveryResponse> getDeliveriesByShipperId(@PathVariable("shipperId") Integer shipperId) {
         return deliveryService.getDeliveriesByShipperId(shipperId);
+    }
+
+    @GetMapping("/getting-by-status/{status}")
+    @Operation(summary = "Get deliveries by status")
+    public List<DeliveryResponse> getDeliveriesByStatus(@PathVariable("status") DeliveryStatus status) {
+        return deliveryService.getDeliveriesByStatus(status);
     }
 
     @PostMapping("/create")

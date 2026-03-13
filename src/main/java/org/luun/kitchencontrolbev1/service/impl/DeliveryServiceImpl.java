@@ -49,6 +49,13 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    public List<DeliveryResponse> getDeliveriesByStatus(DeliveryStatus status) {
+        return deliveryRepository.getDeliveriesByStatus(status.name()).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public DeliveryResponse assignShipperToDelivery(AssignShipperRequest request) {
         if (request.getOrderIds() == null || request.getOrderIds().isEmpty()) {

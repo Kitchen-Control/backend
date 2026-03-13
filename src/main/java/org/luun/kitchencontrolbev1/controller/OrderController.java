@@ -58,7 +58,7 @@ public class OrderController {
 
     @PatchMapping("/{orderId}/complete")
     @Operation(summary = "Complete the order (mark as DONE)")
-    public OrderResponse completeOrder(@PathVariable Integer orderId) {
+    public OrderResponse completeOrder(@PathVariable("orderId") Integer orderId) {
         return orderService.completeOrder(orderId);
     }
 }
