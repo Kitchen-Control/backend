@@ -3,11 +3,11 @@ package org.luun.kitchencontrolbev1.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Or;
 import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
 import org.luun.kitchencontrolbev1.dto.request.OrderStatusUpdateRequest;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
+import org.luun.kitchencontrolbev1.service.OrderDetailFillService;
 import org.luun.kitchencontrolbev1.service.OrderService;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +20,7 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderDetailFillService orderDetailFillService;
 
     @GetMapping
     @Operation(summary = "Get all orders")

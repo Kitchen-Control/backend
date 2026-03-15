@@ -20,6 +20,9 @@ public class Order {
     @Column(name = "order_id")
     private Integer orderId;
 
+    @Column(name = "parent_order_id")
+    private Integer parent_order_id;
+
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "delivery_id")

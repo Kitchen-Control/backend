@@ -28,6 +28,9 @@ public class Product {
     @Column(name = "unit", length = 255)
     private String unit;
 
+    @Column(name = "price")
+    private Float price;
+
     @Column(name = "shelf_life_days")
     private Integer shelfLifeDays;
 

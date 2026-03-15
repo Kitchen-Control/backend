@@ -2,6 +2,7 @@ package org.luun.kitchencontrolbev1.repository;
 
 import org.luun.kitchencontrolbev1.entity.Inventory;
 import org.luun.kitchencontrolbev1.entity.LogBatch;
+import org.luun.kitchencontrolbev1.enums.ProductType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,10 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     // and have a quantity greater than 0, ordered by expiry date in ascending order.
     @Query("SELECT i " +
             "FROM Inventory i " +
-            "WHERE i.product.productId = :productId AND i.expiryDate >= CURRENT_DATE AND i.quantity > 0 ORDER BY i.expiryDate ASC")
+            "WHERE i.product.productId = :productId " +
+            "AND i.expiryDate > CURRENT_DATE AND i.quantity > 0 " +
+            "ORDER BY i.expiryDate ASC")
     List<Inventory> findValidInventoriesForProductOrderByExpiryDateAsc(@Param("productId") Integer productId);
+
+    List<Inventory> findByProduct_ProductType(ProductType productType);
 }

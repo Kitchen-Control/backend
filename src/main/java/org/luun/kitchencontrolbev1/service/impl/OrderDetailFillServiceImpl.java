@@ -11,7 +11,6 @@ import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.OrderDetail;
 import org.luun.kitchencontrolbev1.entity.Inventory;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
-import org.luun.kitchencontrolbev1.repository.OrderRepository;
 import org.luun.kitchencontrolbev1.repository.InventoryRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +22,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class OrderDetailFillServiceImpl implements OrderDetailFillService {
+
+    private static final Integer WARNING_THRESHOLD = 4;
 
     private final OrderDetailFillRepository orderDetailFillRepository;
     private final InventoryRepository inventoryRepository;
@@ -65,7 +66,7 @@ public class OrderDetailFillServiceImpl implements OrderDetailFillService {
     // Giai đoạn 3.1: Phân bổ tự động (Allocation - Logic FEFO)
     // Hệ thống duyệt từng chi tiết đơn hàng (OrderDetail) để giữ chỗ trong các Lô
     // hàng (Batch) theo nguyên tắc Hạn dùng gần nhất (FEFO).
-    public void autoAllocateFEFO(Order order) {
+    public ExpiryWarningDTO autoAllocateFEFO(Order order, boolean skipNearExpiry) {
 
         // Chỉ xem xét các đơn hàng đang ở trạng thái WAITTING hoặc PROCESSING để tính
         // toán số lượng "Đã giữ chỗ"

@@ -145,7 +145,6 @@ public class LogBatchServiceImpl implements LogBatchService {
         logBatch.setStatus(newStatus);
     }
 
-    @Override
     @Transactional
     public void expireLogBatch(Integer batchId) {
         // Finding LogBatch
@@ -158,7 +157,7 @@ public class LogBatchServiceImpl implements LogBatchService {
         report.setReportType("WASTE");
         report.setCreatedDate(LocalDateTime.now());
         report.setUser(null);
-        reportRepository.save(report);
+        reportRepository.save(report); // taoj method tạo report trong report service r bỏ vào handler
     }
 
     /**

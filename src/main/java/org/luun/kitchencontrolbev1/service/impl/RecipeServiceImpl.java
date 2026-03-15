@@ -57,7 +57,7 @@ public class RecipeServiceImpl implements RecipeService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + recipeRequest.getProductId()));
 
         //Checking if the product is a FINISHED_PRODUCT
-        if (mainProduct.getProductType() != ProductType.FINISHED_PRODUCT) {
+        if (mainProduct.getProductType() == ProductType.RAW_MATERIAL) {
             throw new RuntimeException("Product must be a FINISHED_PRODUCT to have a recipe");
         }
         recipe.setProduct(mainProduct);

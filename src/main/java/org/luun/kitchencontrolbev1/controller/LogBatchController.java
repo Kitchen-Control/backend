@@ -70,10 +70,4 @@ public class LogBatchController {
         logBatchService.updateLogBatchStatus(batchId, status);
     }
 
-    @PutMapping("/{batchId}/expire")
-    @Operation(summary = "Mark a log batch as expired and decrease inventory")
-    public ResponseEntity<Void> expireLogBatch(@PathVariable Integer batchId) {
-        logBatchService.expireLogBatch(batchId);
-        return ResponseEntity.ok().build();
-    }
 }

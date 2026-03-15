@@ -5,6 +5,7 @@ import org.luun.kitchencontrolbev1.dto.response.InventoryResponse;
 import org.luun.kitchencontrolbev1.entity.Inventory;
 import org.luun.kitchencontrolbev1.entity.LogBatch;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
+import org.luun.kitchencontrolbev1.enums.ProductType;
 import org.luun.kitchencontrolbev1.repository.InventoryRepository;
 import org.luun.kitchencontrolbev1.repository.OrderDetailRepository;
 import org.luun.kitchencontrolbev1.service.InventoryService;
@@ -55,6 +56,14 @@ public class InventoryServiceImpl implements InventoryService {
         Inventory inventory = inventoryRepository.findById(inventoryId)
                 .orElseThrow(() -> new RuntimeException("Inventory not found"));
         return mapToResponse(inventory);
+    }
+
+    @Override
+    public List<InventoryResponse> getInventoryByProductType(ProductType productType) {
+        List<Inventory> inventories = inventoryRepository.findByProduct_ProductType(productType);
+        return inventories.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
