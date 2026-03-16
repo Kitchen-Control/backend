@@ -48,13 +48,17 @@ public class OrderController {
 
     @PostMapping
     @Operation(summary = "Create a new order")
-    public OrderResponse createOrder(@RequestBody OrderRequest request) {
-        return orderService.createOrder(request);
+    public void createOrder(@RequestBody OrderRequest request) {
+        orderService.createOrder(request);
     }
 
-    @PatchMapping("/update-status")
-    @Operation(summary = "Update orders status")
-    public void updateOrderStatus(@RequestBody OrderStatusUpdateRequest request) {
-        orderService.updateOrderStatus(request.getOrderIds(), request.getStatus());
+    @PatchMapping("/update-status/{storeId}")
+    @Operation(summary = "Update order status")
+    public void updateOrderStatus(
+            @RequestParam Integer orderId,
+            @RequestParam("status") OrderStatus status,
+            @RequestParam(value = "storeId", required = false) String note
+    ) {
+        orderService.updateOrderStatus(orderId, status, note);
     }
 }

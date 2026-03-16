@@ -33,8 +33,11 @@ public class Order {
     @JoinColumn(name = "store_id")
     private Store store;
 
-    @Column(name = "order_date")
+    @Column(name = "order_date", columnDefinition = "varchar")
     private LocalDateTime orderDate;
+
+    @Column(name = "type")
+    private String type;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "orders_status")

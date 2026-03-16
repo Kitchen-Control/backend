@@ -32,11 +32,8 @@ public class DeliveringDeliveryHandler implements DeliveryStatusHandler{
             throw new IllegalStateException("Not all orders are dispatched");
         }
 
-        List<Integer> orderIds = delivery.getOrders()
-                .stream()
-                .map(Order::getOrderId)
-                .toList();
-
-        orderService.updateOrderStatus(orderIds, OrderStatus.DELIVERING);
+        List<Order> orders = delivery.getOrders();
+        orders.forEach(order ->
+                orderService.updateOrderStatus(order.getOrderId(), OrderStatus.DELIVERING, null));
     }
 }

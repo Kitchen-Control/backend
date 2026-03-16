@@ -60,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
     // Creating orders method
     @Override
     @Transactional
-    public OrderResponse createOrder(OrderRequest request) {
+    public void createOrder(OrderRequest request) {
         // 1. Find Store
         Store store = storeService.getStoreById(request.getStoreId());
 
@@ -70,6 +70,14 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderDate(LocalDateTime.now());
         order.setStatus(OrderStatus.WAITING);
         order.setComment(request.getComment());
+
+        // Set type and parent order for order
+        if (request.getType() == "SUPPLEMENT") {
+            order.setType("SUPPLEMENT");
+            order.setParent_order_id(request.getParentOrderId());
+        } else {
+            order.setType("NORMAL");
+        }
 
         // 3. Set the parent Order for the detail
         if (request.getOrderDetails() != null) {
@@ -82,34 +90,36 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 4. Save the Order (and thanks to Cascade, OrderDetails will be saved too)
-        Order savedOrder = orderRepository.save(order);
-
-        return mapToResponse(savedOrder);
+        orderRepository.save(order);
     }
 
     @Override
     @Transactional
-    public void updateOrderStatus(List<Integer> ids, OrderStatus newStatus) {
-        List<Order> orders = orderRepository.findAllById(ids);
+    public void updateOrderStatus(Integer id, OrderStatus newStatus, String note) {
+        Order order = getOrderById(id);
 
-        if (orders.size() != ids.size()) {
-            throw new IllegalStateException("Some orders not exist");
+        // 1 validate transition
+        orderStatusValidator.validate(order.getStatus(), newStatus);
+
+        // 2 run business logic
+        orderStatusTransitionHandler.handle(order, newStatus);
+
+        // 3 update status
+        order.setStatus(newStatus);
+
+        // 4 Add a note for the order if available
+        String currentNote = order.getComment();
+        if (note != null && !note.isBlank()) {
+            if (currentNote != null && !currentNote.isBlank()) {
+                order.setComment(currentNote + " | Reject reason:" + note);
+            } else {
+                order.setComment("Reject reason:" + note);
+            }
         }
 
-        for (Order order : orders) {
-            // 1 validate transition
-            orderStatusValidator.validate(order.getStatus(), newStatus);
-
-            // 2 run business logic
-            orderStatusTransitionHandler.handle(order, newStatus);
-
-            // 3 update status
-            order.setStatus(newStatus);
-
-            Delivery delivery = order.getDelivery();
-            if (delivery != null) {
-                checkDeliveryCompletion(delivery);
-            }
+        Delivery delivery = order.getDelivery();
+        if (delivery != null) {
+            checkDeliveryCompletion(delivery);
         }
     }
 
@@ -118,7 +128,8 @@ public class OrderServiceImpl implements OrderService {
         boolean allFinished = delivery.getOrders().stream()
                 .allMatch(o ->
                         o.getStatus() == OrderStatus.DONE ||
-                                o.getStatus() == OrderStatus.DAMAGED
+                                o.getStatus() == OrderStatus.DAMAGED ||
+                                o.getStatus() == OrderStatus.PARTIAL_DELIVERED
                 );
 
         if (allFinished) {

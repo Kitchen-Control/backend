@@ -11,6 +11,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderRequest {
     Integer storeId;
+    Integer parentOrderId;
     String comment;
+    String type;
     List<OrderDetailRequest> orderDetails;
 }

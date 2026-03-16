@@ -27,8 +27,6 @@ public class WaitingDeliveryHandler implements DeliveryStatusHandler {
                 .stream()
                 .map(Order::getOrderId)
                 .toList();
-
-        orderService.updateOrderStatus(orderIds, OrderStatus.PROCESSING);
     }
 
 }

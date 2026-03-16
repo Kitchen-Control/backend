@@ -31,7 +31,7 @@ public class CompletedReceiptHandle implements ReceiptStatusHandler{
 
         receipt.setExportDate(LocalDateTime.now());
 
-        orderService.updateOrderStatus(List.of(receipt.getOrder().getOrderId()), OrderStatus.DISPATCHED);
+        orderService.updateOrderStatus(receipt.getOrder().getOrderId(), OrderStatus.DISPATCHED, null);
 
         // Lấy ra danh sách các Lô hàng đã bị "giữ chỗ" lúc nãy cho Đơn hàng này
         List<OrderDetailFill> fills = orderDetailFillService
