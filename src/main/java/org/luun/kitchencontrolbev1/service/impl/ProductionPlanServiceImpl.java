@@ -113,6 +113,7 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
     }
 
     @Override
+    @Transactional
     public void updateProductionPlanStatus(Integer id, ProductionPlanStatus newStatus) {
         ProductionPlan plan = getProductionPlanEntityById(id);
 

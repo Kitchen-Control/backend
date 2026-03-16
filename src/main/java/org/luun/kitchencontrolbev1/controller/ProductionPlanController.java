@@ -68,7 +68,7 @@ public class ProductionPlanController {
     @PatchMapping("/{id}/status")
     public void updateProductionPlanStatus(
             @PathVariable Integer id,
-            @RequestBody ProductionPlanStatus status) {
+            @RequestParam ProductionPlanStatus status) {
         productionPlanService.updateProductionPlanStatus(id, status);
     }
 }
