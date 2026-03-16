@@ -358,13 +358,22 @@ public class OrderServiceImpl implements OrderService {
         response.setImg(order.getImg());
         response.setComment(order.getComment());
 
-        // Map details
+        // Map details and calculate total price
+        float totalOrderPrice = 0f;
         if (order.getOrderDetails() != null) {
             List<OrderDetailResponse> details = order.getOrderDetails().stream()
                     .map(this::mapToDetailResponse)
                     .collect(Collectors.toList());
             response.setOrderDetails(details);
+            
+            // Calculate total price based on the details
+            for(OrderDetailResponse detailResponse : details) {
+                if (detailResponse.getItemTotalPrice() != null) {
+                    totalOrderPrice += detailResponse.getItemTotalPrice();
+                }
+            }
         }
+        response.setTotalPrice(totalOrderPrice);
 
         // Map feedback
         if (order.getQualityFeedback() != null) {
@@ -380,10 +389,19 @@ public class OrderServiceImpl implements OrderService {
         OrderDetailResponse response = new OrderDetailResponse();
         response.setOrderDetailId(detail.getOrderDetailId());
 
-        // Map Product info
+        // Map Product info and Price
         if (detail.getProduct() != null) {
             response.setProductId(detail.getProduct().getProductId());
             response.setProductName(detail.getProduct().getProductName());
+            
+            Float productPrice = detail.getProduct().getPrice();
+            response.setPrice(productPrice);
+            
+            if (productPrice != null && detail.getQuantity() != null) {
+                 response.setItemTotalPrice(productPrice * detail.getQuantity());
+            } else {
+                 response.setItemTotalPrice(0f);
+            }
         }
 
         // Map OrderDetailFill info

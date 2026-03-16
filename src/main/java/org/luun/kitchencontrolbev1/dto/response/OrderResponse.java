@@ -27,6 +27,7 @@ public class OrderResponse {
     OrderStatus status;
     String img;
     String comment;
+    Float totalPrice; // Tổng giá trị của toàn bộ đơn hàng
     
     // Details
     List<OrderDetailResponse> orderDetails;

@@ -65,6 +65,7 @@ public class ProductionPlanController {
         return productionPlanService.updateProductionPlan(id, request);
     }
 
+    @Operation(summary = "Update production plan status", description = "Updates the status of a specific production plan.")
     @PatchMapping("/{id}/status")
     public void updateProductionPlanStatus(
             @PathVariable Integer id,

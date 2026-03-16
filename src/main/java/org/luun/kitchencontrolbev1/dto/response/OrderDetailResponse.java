@@ -18,5 +18,7 @@ public class OrderDetailResponse {
     Integer productId;
     String productName;
     Float quantity;
+    Float price; // Thêm trường giá cho từng món
+    Float itemTotalPrice; // Tổng giá cho chi tiết này (quantity * price)
     List<OrderDetailFillResponse> orderDetailFills;
 }

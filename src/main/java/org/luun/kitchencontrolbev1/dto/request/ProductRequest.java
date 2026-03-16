@@ -12,5 +12,6 @@ public class ProductRequest {
     String productName;
     String productType;
     String unit;
+    float price;
     int shelfLifeDay;
 }
