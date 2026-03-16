@@ -11,4 +11,5 @@ public interface ProductionPlanService {
     ProductionPlanResponse getProductionPlanById(Integer id);
     ProductionPlan getProductionPlanEntityById(Integer id);
     ProductionPlanResponse createProductionPlan(ProductionPlanRequest request);
+    ProductionPlanResponse updateProductionPlan(Integer id, ProductionPlanRequest request);
 }

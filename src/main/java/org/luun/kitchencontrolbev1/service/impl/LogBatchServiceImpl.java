@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LogBatchServiceImpl implements LogBatchService {
 
-    private final ReportRepository reportRepository;
     private final ProductionPlanService productionPlanService;
     private final ProductService productService;
 
@@ -143,21 +142,6 @@ public class LogBatchServiceImpl implements LogBatchService {
         logBatchStatusTransitionHandler.handle(logBatch, newStatus);
 
         logBatch.setStatus(newStatus);
-    }
-
-    @Transactional
-    public void expireLogBatch(Integer batchId) {
-        // Finding LogBatch
-        LogBatch logBatch = getLogBatchEntityById(batchId);
-
-        updateLogBatchStatus(batchId, LogBatchStatus.DAMAGED);
-
-        // Creating report
-        Report report = new Report();
-        report.setReportType("WASTE");
-        report.setCreatedDate(LocalDateTime.now());
-        report.setUser(null);
-        reportRepository.save(report); // taoj method tạo report trong report service r bỏ vào handler
     }
 
     /**

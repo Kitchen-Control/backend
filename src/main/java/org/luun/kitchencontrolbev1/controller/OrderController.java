@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.dto.request.ConfirmAllocationRequest;
 import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
-import org.luun.kitchencontrolbev1.dto.request.OrderStatusUpdateRequest;
 import org.luun.kitchencontrolbev1.dto.response.FefoSuggestionResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
@@ -128,5 +127,15 @@ public class OrderController {
             @PathVariable("orderId") Integer orderId,
             @RequestBody ConfirmAllocationRequest request) {
         orderService.confirmAllocation(orderId, request);
+    }
+
+
+    @Operation(summary = "Create additional order",
+            description = "Create a additional order and set parent order for it")
+    @PutMapping("/{id}")
+    public void createAdditionalOrder(
+            @PathVariable Integer id,
+            @RequestBody OrderRequest request) {
+        orderService.createAdditionalOrder(id, request);
     }
 }

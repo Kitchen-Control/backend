@@ -26,9 +26,9 @@ public class DeliveringDeliveryHandler implements DeliveryStatusHandler {
 
         List<Order> orders = delivery.getOrders();
         orders.forEach(order -> orderService.updateOrderStatus(
-                        order.getOrderId(),
-                        OrderStatus.DELIVERING, null
-                ));
+                order.getOrderId(),
+                OrderStatus.DELIVERING, null
+        ));
 
     }
 }

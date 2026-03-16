@@ -69,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
     // Creating orders method
     @Override
     @Transactional
-    public void createOrder(OrderRequest request) {
+    public Order createOrder(OrderRequest request) {
         // 1. Find Store
         Store store = storeService.getStoreById(request.getStoreId());
 
@@ -77,16 +77,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setStore(store);
         order.setOrderDate(LocalDateTime.now());
+        order.setType("NORMAL");
         order.setStatus(OrderStatus.WAITING);
         order.setComment(request.getComment());
-
-        // Set type and parent order for order
-        if (request.getType() == "SUPPLEMENT") {
-            order.setType("SUPPLEMENT");
-            order.setParent_order_id(request.getParentOrderId());
-        } else {
-            order.setType("NORMAL");
-        }
 
         // 3. Set the parent Order for the detail
         if (request.getOrderDetails() != null) {
@@ -99,8 +92,19 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 4. Save the Order (and thanks to Cascade, OrderDetails will be saved too)
-        orderRepository.save(order);
+        return orderRepository.save(order);
     }
+
+    @Override
+    public Order createAdditionalOrder(Integer parentOrderId, OrderRequest request) {
+        Order order = createOrder(request);
+
+        order.setType("SUPPLEMENT");
+        order.setParent_order_id(parentOrderId);
+
+        return orderRepository.save(order);
+    }
+
 
     @Override
     @Transactional

@@ -51,4 +51,16 @@ public class ProductionPlanController {
         // This controller is now clean and only works with DTOs
         return productionPlanService.createProductionPlan(request);
     }
+
+    @Operation(summary = "Update a production plan", description = "Updates an existing production plan and its details. This will replace the old details with the new ones provided.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated production plan"),
+            @ApiResponse(responseCode = "404", description = "Production plan not found")
+    })
+    @PutMapping("/{id}")
+    public ProductionPlanResponse updateProductionPlan(
+            @Parameter(description = "ID of the production plan to update") @PathVariable Integer id,
+            @RequestBody ProductionPlanRequest request) {
+        return productionPlanService.updateProductionPlan(id, request);
+    }
 }
