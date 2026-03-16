@@ -1,6 +1,8 @@
 package org.luun.kitchencontrolbev1.service;
 
+import org.luun.kitchencontrolbev1.dto.request.ConfirmAllocationRequest;
 import org.luun.kitchencontrolbev1.dto.request.OrderRequest;
+import org.luun.kitchencontrolbev1.dto.response.FefoSuggestionResponse;
 import org.luun.kitchencontrolbev1.dto.response.OrderResponse;
 import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.enums.OrderStatus;
@@ -20,4 +22,8 @@ public interface OrderService {
     List<OrderResponse> getOrdersByStatus(OrderStatus orderStatus);
 
     List<OrderResponse> getOrdersByShipperId(Integer shipperId);
+
+    FefoSuggestionResponse getFefoAllocationSuggestion(Integer orderId);
+
+    void confirmAllocation(Integer orderId, ConfirmAllocationRequest request);
 }

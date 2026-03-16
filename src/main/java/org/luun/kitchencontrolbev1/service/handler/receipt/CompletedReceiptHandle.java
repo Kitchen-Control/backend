@@ -8,18 +8,26 @@ import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 import org.luun.kitchencontrolbev1.service.InventoryService;
 import org.luun.kitchencontrolbev1.service.OrderDetailFillService;
 import org.luun.kitchencontrolbev1.service.OrderService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
-public class CompletedReceiptHandle implements ReceiptStatusHandler{
+public class CompletedReceiptHandle implements ReceiptStatusHandler {
 
     private final OrderService orderService;
     private final OrderDetailFillService orderDetailFillService;
     private final InventoryService inventoryService;
+
+    public CompletedReceiptHandle(@Lazy OrderService orderService,
+                                  OrderDetailFillService orderDetailFillService,
+                                  InventoryService inventoryService) {
+        this.orderService = orderService;
+        this.orderDetailFillService = orderDetailFillService;
+        this.inventoryService = inventoryService;
+    }
 
     @Override
     public ReceiptStatus supportedStatus() {
@@ -37,7 +45,8 @@ public class CompletedReceiptHandle implements ReceiptStatusHandler{
         List<OrderDetailFill> fills = orderDetailFillService
                 .getOrderDetailFillsByOrderId(receipt.getOrder().getOrderId());
 
-        // Với từng cục hàng đã nhặt, tiến hành trừ kho thực tế và Lưu Log Lịch sử (Transaction)
+        // Với từng cục hàng đã nhặt, tiến hành trừ kho thực tế và Lưu Log Lịch sử
+        // (Transaction)
         for (OrderDetailFill fill : fills) {
             // Lấy Lô hàng thực trong database (Inventory)
             Inventory inv = inventoryService.getInventoryByBatchId(fill.getBatch().getBatchId());
