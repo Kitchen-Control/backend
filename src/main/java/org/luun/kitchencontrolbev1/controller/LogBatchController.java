@@ -7,7 +7,6 @@ import org.luun.kitchencontrolbev1.dto.request.LogBatchRequest;
 import org.luun.kitchencontrolbev1.dto.response.LogBatchResponse;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.service.LogBatchService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,8 +51,8 @@ public class LogBatchController {
 
     @PostMapping("/production")
     @Operation(summary = "Create a new log batch (Production)")
-    public LogBatchResponse createProLogBatch(@RequestBody LogBatchRequest request) {
-        return logBatchService.createProductionLogBatch(request);
+    public void createProLogBatch(@RequestBody List<LogBatchRequest> requests) {
+        logBatchService.createProductionLogBatch(requests);
     }
 
     @PostMapping("/purchase")

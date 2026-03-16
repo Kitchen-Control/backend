@@ -5,5 +5,6 @@ public enum ProductionPlanStatus {
     WAITING,
     PROCESSING,
     COMPLETE_ONE_SECTION,
-    DONE
+    DONE,
+    CANCEL
 }

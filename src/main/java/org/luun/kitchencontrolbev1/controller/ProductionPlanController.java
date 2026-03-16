@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.dto.request.ProductionPlanRequest;
 import org.luun.kitchencontrolbev1.dto.response.ProductionPlanResponse;
+import org.luun.kitchencontrolbev1.enums.ProductionPlanStatus;
 import org.luun.kitchencontrolbev1.service.ProductionPlanService;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,5 +63,12 @@ public class ProductionPlanController {
             @Parameter(description = "ID of the production plan to update") @PathVariable Integer id,
             @RequestBody ProductionPlanRequest request) {
         return productionPlanService.updateProductionPlan(id, request);
+    }
+
+    @PatchMapping("/{id}/status")
+    public void updateProductionPlanStatus(
+            @PathVariable Integer id,
+            @RequestBody ProductionPlanStatus status) {
+        productionPlanService.updateProductionPlanStatus(id, status);
     }
 }

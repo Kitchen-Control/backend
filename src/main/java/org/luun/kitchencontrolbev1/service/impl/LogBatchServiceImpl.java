@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.luun.kitchencontrolbev1.dto.request.LogBatchRequest;
 import org.luun.kitchencontrolbev1.dto.response.LogBatchResponse;
 import org.luun.kitchencontrolbev1.entity.*;
+import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.enums.LogBatchType;
+import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.luun.kitchencontrolbev1.repository.*;
 import org.luun.kitchencontrolbev1.service.*;
 import org.luun.kitchencontrolbev1.service.statustransitionhandler.LogBatchStatusTransitionHandler;
@@ -75,32 +77,33 @@ public class LogBatchServiceImpl implements LogBatchService {
 
     @Override
     @Transactional
-    public LogBatchResponse createProductionLogBatch(LogBatchRequest request) {
-        LogBatch logBatch = new LogBatch();
+    public void createProductionLogBatch(List<LogBatchRequest> requests) {
 
-        // 1. Gắn Production Plan
-        ProductionPlan plan = productionPlanService.getProductionPlanEntityById(request.getPlanId());
-        logBatch.setPlan(plan);
+        for (LogBatchRequest request : requests) {
+            LogBatch logBatch = new LogBatch();
 
-        // 2. Gắn Product
-        Product product = productService.getProductById(request.getProductId());
-        logBatch.setProduct(product);
+            // 1. Gắn Production Plan
+            ProductionPlan plan = productionPlanService.getProductionPlanEntityById(request.getPlanId());
+            logBatch.setPlan(plan);
 
-        // 3. Set các thuộc tính khác
-        logBatch.setQuantity(request.getQuantity());
-        logBatch.setProductionDate(request.getProductionDate());
-        logBatch.setExpiryDate(LocalDate.now().plusDays(product.getShelfLifeDays()));
-        logBatch.setCreatedAt(LocalDateTime.now());
-        logBatch.setStatus(LogBatchStatus.PROCESSING);
+            // 2. Gắn Product
+            Product product = productService.getProductById(request.getProductId());
+            logBatch.setProduct(product);
 
-        if (request.getType() == null || request.getType() != LogBatchType.PRODUCTION) {
-            throw new RuntimeException("Type is required or must be PRODUCTION");
+            // 3. Set các thuộc tính khác
+            logBatch.setQuantity(request.getQuantity());
+            logBatch.setProductionDate(request.getProductionDate());
+            logBatch.setExpiryDate(LocalDate.now().plusDays(product.getShelfLifeDays()));
+            logBatch.setCreatedAt(LocalDateTime.now());
+            logBatch.setStatus(LogBatchStatus.PROCESSING);
+
+            if (request.getType() == null || request.getType() != LogBatchType.PRODUCTION) {
+                throw new RuntimeException("Type is required or must be PRODUCTION");
+            }
+
+            logBatch.setType(request.getType());
+            logBatchRepository.save(logBatch);
         }
-
-        logBatch.setType(request.getType());
-        LogBatch savedBatch = logBatchRepository.save(logBatch);
-
-        return mapToResponse(savedBatch);
     }
 
     @Override
@@ -142,6 +145,8 @@ public class LogBatchServiceImpl implements LogBatchService {
         logBatchStatusTransitionHandler.handle(logBatch, newStatus);
 
         logBatch.setStatus(newStatus);
+
+        productionPlanService.checkPlanCompletion(logBatch.getPlan());
     }
 
     /**
@@ -161,7 +166,7 @@ public class LogBatchServiceImpl implements LogBatchService {
                 today,
                 List.of(LogBatchStatus.DONE)
         );
-        if(expiredBatches.isEmpty()) {
+        if (expiredBatches.isEmpty()) {
             log.warn("No expired batches found.");
             return;
         }

@@ -20,7 +20,7 @@ public interface LogBatchService {
 
     List<LogBatchResponse> getLogBatchesByStatus(LogBatchStatus status);
 
-    LogBatchResponse createProductionLogBatch(LogBatchRequest request);
+    void createProductionLogBatch(List<LogBatchRequest> requests);
 
     LogBatchResponse createPurchaseLogBatch(LogBatchRequest request);
 

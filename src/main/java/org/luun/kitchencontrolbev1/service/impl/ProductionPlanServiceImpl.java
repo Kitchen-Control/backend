@@ -5,16 +5,20 @@ import org.luun.kitchencontrolbev1.dto.request.ProductionPlanDetailRequest;
 import org.luun.kitchencontrolbev1.dto.request.ProductionPlanRequest;
 import org.luun.kitchencontrolbev1.dto.response.ProductionPlanDetailResponse;
 import org.luun.kitchencontrolbev1.dto.response.ProductionPlanResponse;
+import org.luun.kitchencontrolbev1.entity.LogBatch;
 import org.luun.kitchencontrolbev1.entity.ProductionPlan;
 import org.luun.kitchencontrolbev1.entity.ProductionPlanDetail;
+import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
+import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.enums.ProductionPlanStatus;
 import org.luun.kitchencontrolbev1.repository.ProductionPlanRepository;
 import org.luun.kitchencontrolbev1.service.ProductionPlanDetailService;
 import org.luun.kitchencontrolbev1.service.ProductionPlanService;
+import org.luun.kitchencontrolbev1.service.statustransitionhandler.PlanStatusTransitionHandler;
+import org.luun.kitchencontrolbev1.service.statusvalidator.ProductionPlanStatusValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,8 +26,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductionPlanServiceImpl implements ProductionPlanService {
 
-    private final ProductionPlanRepository productionPlanRepository;
     private final ProductionPlanDetailService productionPlanDetailService;
+
+    private final ProductionPlanRepository productionPlanRepository;
+    private final ProductionPlanStatusValidator productionPlanStatusValidator;
+    private final PlanStatusTransitionHandler planStatusTransitionHandler;
+
 
     @Override
     public List<ProductionPlanResponse> getProductionPlans() {
@@ -76,7 +84,7 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         // 1. Lấy ProductionPlan từ DB
         ProductionPlan plan = getProductionPlanEntityById(id);
 
-        if(plan.getStatus() != ProductionPlanStatus.DRAFT) {
+        if (plan.getStatus() != ProductionPlanStatus.DRAFT) {
             throw new IllegalStateException("Production plan is not in DRAFT status");
         }
 
@@ -104,6 +112,53 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         return mapToResponse(updatedPlan);
     }
 
+    @Override
+    public void updateProductionPlanStatus(Integer id, ProductionPlanStatus newStatus) {
+        ProductionPlan plan = getProductionPlanEntityById(id);
+
+        productionPlanStatusValidator.validate(plan.getStatus(), newStatus);
+
+        planStatusTransitionHandler.handle(plan, newStatus);
+
+        plan.setStatus(newStatus);
+    }
+
+    @Override
+    @Transactional
+    public void checkPlanCompletion(ProductionPlan plan) {
+
+        List<LogBatch> batches = plan.getLogBatches();
+
+        if (batches == null || batches.isEmpty()) {
+            return;
+        }
+
+        boolean allDone = true;
+        boolean allDoneOrDamaged = true;
+
+        for (LogBatch batch : batches) {
+
+            if (batch.getStatus() != LogBatchStatus.DONE) {
+                allDone = false;
+            }
+
+            if (batch.getStatus() != LogBatchStatus.DONE &&
+                    batch.getStatus() != LogBatchStatus.DAMAGED) {
+                allDoneOrDamaged = false;
+            }
+
+            if (!allDone && !allDoneOrDamaged) {
+                break;
+            }
+        }
+
+        if (allDone) {
+            plan.setStatus(ProductionPlanStatus.DONE);
+        } else if (allDoneOrDamaged) {
+            plan.setStatus(ProductionPlanStatus.COMPLETE_ONE_SECTION);
+        }
+    }
+
     private ProductionPlanResponse mapToResponse(ProductionPlan productionPlan) {
         ProductionPlanResponse response = new ProductionPlanResponse();
         response.setPlanId(productionPlan.getPlanId());
@@ -113,7 +168,7 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         response.setStatus(productionPlan.getStatus());
         response.setNote(productionPlan.getNote());
 
-        if(productionPlan.getProductionPlanDetails() != null) {
+        if (productionPlan.getProductionPlanDetails() != null) {
             List<ProductionPlanDetailResponse> details = productionPlan.getProductionPlanDetails()
                     .stream()
                     .map(this::mapToDetailResponse)
