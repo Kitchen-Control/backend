@@ -16,6 +16,7 @@ import org.luun.kitchencontrolbev1.service.statusvalidator.ReceiptStatusValidato
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,21 +60,14 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
 
         Receipt receipt = new Receipt();
-        // Generate a random internal code, easily trackable
         receipt.setReceiptCode("REC-" + System.currentTimeMillis());
         receipt.setOrder(order);
         receipt.setStatus(ReceiptStatus.DRAFT);
+        receipt.setExportDate(LocalDateTime.now());
         receipt.setNote(note);
 
         Receipt savedReceipt = receiptRepository.save(receipt);
         return mapToResponse(savedReceipt);
-    }
-
-    @Override
-    @Transactional
-    // Giai đoạn 3.3: Xác nhận Xuất kho (Dispatched)
-    public void confirmReceipt(List<Integer> receiptIds) {
-        updateReceiptStatus(receiptIds, ReceiptStatus.COMPLETED);
     }
 
     @Override

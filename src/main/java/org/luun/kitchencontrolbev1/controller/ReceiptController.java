@@ -39,12 +39,6 @@ public class ReceiptController {
         return receiptService.createReceipt(orderId, note);
     }
 
-    @PostMapping("/confirm")
-    @Operation(summary = "Confirm export and deduct physical inventory")
-    public void confirmReceipt(@RequestBody List<Integer> receiptId) {
-        receiptService.confirmReceipt(receiptId);
-    }
-
     @PatchMapping("/status")
     @Operation(summary = "Update receipts status (Use confirmReceipt for COMPLETED)")
     public void updateReceiptStatus(@RequestBody ReceiptStatusUpdateRequest request) {

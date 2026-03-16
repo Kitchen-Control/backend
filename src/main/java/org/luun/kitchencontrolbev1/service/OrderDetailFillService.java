@@ -17,5 +17,5 @@ public interface OrderDetailFillService {
 
     List<OrderDetailFill> getOrderDetailFillsByOrderId(Integer orderId);
 
-    ExpiryWarningDTO autoAllocateFEFO(Order order, boolean skipNearExpiry);
+    void autoAllocateFEFO(Order order, boolean skipNearExpiry);
 }

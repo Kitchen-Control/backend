@@ -29,8 +29,12 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             SELECT o FROM Order o 
             WHERE o.orderId IN :ids 
             AND o.delivery IS NULL
+            AND o.status = :status            
             """)
-    List<Order> findAvailableOrders(List<Integer> ids);
+    List<Order> findAvailableOrders(
+            @Param("ids") List<Integer> ids,
+            @Param("status") OrderStatus status
+    );
 
     List<Order> findByDelivery_DeliveryId(Integer deliveryId);
 }

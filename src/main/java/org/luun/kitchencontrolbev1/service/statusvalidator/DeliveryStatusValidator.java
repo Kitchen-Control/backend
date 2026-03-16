@@ -10,8 +10,7 @@ import java.util.Set;
 public class DeliveryStatusValidator {
 
     private static final Map<DeliveryStatus, Set<DeliveryStatus>> TRANSITIONS = Map.of(
-            DeliveryStatus.DRAFT, Set.of(DeliveryStatus.WAITING, DeliveryStatus.CANCEL),
-            DeliveryStatus.WAITING, Set.of(DeliveryStatus.DELIVERING),
+            DeliveryStatus.WAITING, Set.of(DeliveryStatus.DELIVERING, DeliveryStatus.CANCEL),
             DeliveryStatus.DELIVERING, Set.of(DeliveryStatus.DONE),
             DeliveryStatus.DONE, Set.of(),
             DeliveryStatus.CANCEL, Set.of()

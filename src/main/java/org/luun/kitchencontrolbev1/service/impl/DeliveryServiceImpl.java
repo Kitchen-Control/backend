@@ -11,6 +11,7 @@ import org.luun.kitchencontrolbev1.entity.Order;
 import org.luun.kitchencontrolbev1.entity.OrderDetail;
 import org.luun.kitchencontrolbev1.entity.User;
 import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
+import org.luun.kitchencontrolbev1.enums.OrderStatus;
 import org.luun.kitchencontrolbev1.repository.DeliveryRepository;
 import org.luun.kitchencontrolbev1.repository.OrderRepository;
 import org.luun.kitchencontrolbev1.service.DeliveryService;
@@ -72,12 +73,13 @@ public class DeliveryServiceImpl implements DeliveryService {
         delivery.setShipper(shipper);
         delivery.setDeliveryDate(request.getDeliveryDate());
         delivery.setCreatedAt(LocalDateTime.now());
-        delivery.setStatus(DeliveryStatus.DRAFT);
+        delivery.setStatus(DeliveryStatus.WAITING);
 
         Delivery savedDelivery = deliveryRepository.save(delivery);
 
         // Assign orders to the delivery
-        List<Order> orders = orderRepository.findAvailableOrders(request.getOrderIds());
+        List<Order> orders = orderRepository.findAvailableOrders(
+                request.getOrderIds(), OrderStatus.DISPATCHED);
 
         if (orders.size() != request.getOrderIds().size()) {
             throw new IllegalStateException("Some orders already assigned or not exist");

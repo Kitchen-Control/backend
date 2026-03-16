@@ -12,7 +12,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class DeliveringDeliveryHandler implements DeliveryStatusHandler{
+public class DeliveringDeliveryHandler implements DeliveryStatusHandler {
 
     private final OrderService orderService;
 
@@ -24,16 +24,11 @@ public class DeliveringDeliveryHandler implements DeliveryStatusHandler{
     @Override
     public void handle(Delivery delivery) {
 
-        boolean allDispatched = delivery.getOrders()
-                .stream()
-                .allMatch(order -> order.getStatus() == OrderStatus.DISPATCHED);
-
-        if(!allDispatched) {
-            throw new IllegalStateException("Not all orders are dispatched");
-        }
-
         List<Order> orders = delivery.getOrders();
-        orders.forEach(order ->
-                orderService.updateOrderStatus(order.getOrderId(), OrderStatus.DELIVERING, null));
+        orders.forEach(order -> orderService.updateOrderStatus(
+                        order.getOrderId(),
+                        OrderStatus.DELIVERING, null
+                ));
+
     }
 }
