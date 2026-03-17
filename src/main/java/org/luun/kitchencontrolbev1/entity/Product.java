@@ -61,4 +61,8 @@ public class Product {
     @JsonManagedReference
     @OneToMany(mappedBy = "product")
     private List<ProductionPlanDetail> productionPlanDetails;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "product")
+    private List<WasteLog> wasteLogs;
 }

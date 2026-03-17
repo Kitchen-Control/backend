@@ -4,10 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.luun.kitchencontrolbev1.entity.Inventory;
 import org.luun.kitchencontrolbev1.entity.InventoryTransaction;
 import org.luun.kitchencontrolbev1.entity.LogBatch;
-import org.luun.kitchencontrolbev1.entity.Report;
-import org.luun.kitchencontrolbev1.enums.InventoryTransactionType;
+import org.luun.kitchencontrolbev1.entity.WasteLog;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
-import org.luun.kitchencontrolbev1.repository.ReportRepository;
+import org.luun.kitchencontrolbev1.repository.WasteLogRepository;
 import org.luun.kitchencontrolbev1.service.InventoryService;
 import org.luun.kitchencontrolbev1.service.InventoryTransactionService;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,7 @@ public class DamagedLogBatchHandler implements LogBatchStatusHandler{
 
     private final InventoryService inventoryService;
     private final InventoryTransactionService inventoryTransactionService;
-    private final ReportRepository reportRepository;
+    private final WasteLogRepository wasteLogRepository;
 
     @Override
     public LogBatchStatus supportedStatus() {
@@ -44,10 +43,13 @@ public class DamagedLogBatchHandler implements LogBatchStatusHandler{
         inventory.setQuantity((float) 0);
 
         // Creating report
-        Report report = new Report();
-        report.setReportType("WASTE");
-        report.setCreatedDate(LocalDateTime.now());
-        report.setUser(null);
-        reportRepository.save(report);
+        WasteLog wasteLog = new WasteLog();
+        wasteLog.setBatch(batch);
+        wasteLog.setProduct(batch.getProduct());
+        wasteLog.setQuantity(batch.getQuantity());
+        wasteLog.setWasteType(supportedStatus().name());
+        wasteLog.setCreatedAt(LocalDateTime.now());
+        wasteLog.setNote("This waste log is automatically generated when log batch is damaged!!");
+        wasteLogRepository.save(wasteLog);
     }
 }
