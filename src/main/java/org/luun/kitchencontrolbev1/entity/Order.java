@@ -33,7 +33,7 @@ public class Order {
     @JoinColumn(name = "store_id")
     private Store store;
 
-    @Column(name = "order_date", columnDefinition = "varchar")
+    @Column(name = "order_date")
     private LocalDateTime orderDate;
 
     @Column(name = "type")
@@ -71,5 +71,9 @@ public class Order {
 
         this.orderDetails.add(detail);
     }
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "order")
+    private List<WasteLog> wasteLogs;
 
 }

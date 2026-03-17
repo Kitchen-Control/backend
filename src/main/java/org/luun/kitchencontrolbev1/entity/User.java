@@ -40,7 +40,5 @@ public class User {
     @OneToMany(mappedBy = "shipper")
     private List<Delivery> deliveries;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "user")
-    private List<Report> reports;
+
 }

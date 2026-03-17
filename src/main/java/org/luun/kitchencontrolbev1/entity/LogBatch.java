@@ -64,6 +64,10 @@ public class LogBatch {
     @OneToMany(mappedBy = "batch")
     private List<OrderDetailFill> orderDetailFills  = new ArrayList<>();
 
+    @JsonManagedReference
+    @OneToMany(mappedBy = "batch")
+    private List<WasteLog> wasteLogs;
+
     public void addInventoryTransaction(InventoryTransaction transaction) {
         inventoryTransactions.add(transaction);
         transaction.setBatch(this);
