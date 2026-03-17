@@ -15,6 +15,7 @@ public class ProductResponse {
     String productName;
     String productType;
     String unit;
+    Float price;
     Integer shelfLifeDays;
     Float availableStock;
 }

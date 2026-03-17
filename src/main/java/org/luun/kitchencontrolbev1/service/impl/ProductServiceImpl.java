@@ -71,6 +71,7 @@ public class ProductServiceImpl implements ProductService {
         product.setProductType(updatedProduct.getProductType());
         product.setUnit(updatedProduct.getUnit());
         product.setShelfLifeDays(updatedProduct.getShelfLifeDays());
+        product.setPrice(updatedProduct.getPrice());
 
         Product savedProduct = productRepository.save(product);
         return mapToResponse(savedProduct);
@@ -94,6 +95,7 @@ public class ProductServiceImpl implements ProductService {
         ProductResponse response = new ProductResponse();
         response.setProductId(product.getProductId());
         response.setProductName(product.getProductName());
+        response.setPrice(product.getPrice());
 
         if (product.getProductType() != null) {
             response.setProductType(product.getProductType().toString());
