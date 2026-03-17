@@ -89,6 +89,19 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
     }
 
+    @Override
+    @Transactional
+    public void deleteReceipt(Integer receiptId) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
+
+        if (receipt.getStatus() != ReceiptStatus.DRAFT) {
+            throw new RuntimeException("Cannot delete a receipt that is not in DRAFT status.");
+        }
+
+        receiptRepository.delete(receipt);
+    }
+
     private ReceiptResponse mapToResponse(Receipt receipt) {
         ReceiptResponse response = new ReceiptResponse();
         response.setReceiptId(receipt.getReceiptId());

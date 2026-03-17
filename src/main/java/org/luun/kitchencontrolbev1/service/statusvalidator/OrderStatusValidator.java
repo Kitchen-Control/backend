@@ -15,7 +15,7 @@ public class OrderStatusValidator {
             OrderStatus.DISPATCHED, Set.of(OrderStatus.DELIVERING),
             OrderStatus.DELIVERING, Set.of(OrderStatus.DONE, OrderStatus.DAMAGED, OrderStatus.PARTIAL_DELIVERED),
             OrderStatus.PARTIAL_DELIVERED, Set.of(OrderStatus.DONE),
-            OrderStatus.DONE, Set.of(),
+            OrderStatus.DONE, Set.of(OrderStatus.PARTIAL_DELIVERED),
             OrderStatus.DAMAGED, Set.of(),
             OrderStatus.CANCELED, Set.of()
     );

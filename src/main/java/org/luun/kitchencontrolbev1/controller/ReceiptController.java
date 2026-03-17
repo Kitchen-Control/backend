@@ -44,4 +44,10 @@ public class ReceiptController {
     public void updateReceiptStatus(@RequestBody ReceiptStatusUpdateRequest request) {
         receiptService.updateReceiptStatus(request.getReceiptIds(), request.getStatus());
     }
+
+    @DeleteMapping("/{receiptId}")
+    @Operation(summary = "Delete a DRAFT receipt")
+    public void deleteReceipt(@PathVariable Integer receiptId) {
+        receiptService.deleteReceipt(receiptId);
+    }
 }

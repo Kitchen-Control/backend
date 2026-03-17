@@ -57,12 +57,12 @@ public class OrderController {
         orderService.createOrder(request);
     }
 
-    @PatchMapping("/update-status/{storeId}")
+    @PatchMapping("/update-status/{note}")
     @Operation(summary = "Update order status")
     public void updateOrderStatus(
             @RequestParam Integer orderId,
             @RequestParam("status") OrderStatus status,
-            @RequestParam(value = "storeId", required = false) String note
+            @RequestParam(value = "note", required = false) String note
     ) {
         orderService.updateOrderStatus(orderId, status, note);
     }
