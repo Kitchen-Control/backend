@@ -256,8 +256,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional // Đảm bảo tất cả đều đc lưu thành công
     public void confirmAllocation(Integer orderId, ConfirmAllocationRequest request) {
         // 1. Lấy đơn hàng và xác thực trạng thái
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
+        Order order = getOrderById(orderId);
 
         // Kiểm tra xem đơn hàng có status đang ở WAITING ko ?
         if (order.getStatus() != OrderStatus.WAITING) {
@@ -271,8 +270,7 @@ public class OrderServiceImpl implements OrderService {
         // 2. Giai đoạn VALIDATION: Kiểm tra toàn bộ request trước khi thực hiện bất kỳ
         // thay đổi nào
         for (ConfirmAllocationRequest.FinalProductAllocation finalAllocation : request.getFinalAllocations()) {
-            // Lấy orderDetailId trong request để tra cứu Map của orderDetail gốc xem có hợp
-            // lệ ko ?
+            // Lấy orderDetailId trong request để tra cứu Map của orderDetail gốc xem có hợp lệ ko ?
             OrderDetail originalDetail = originalDetailsMap.get(finalAllocation.getOrderDetailId());
             if (originalDetail == null) {
                 throw new RuntimeException(
