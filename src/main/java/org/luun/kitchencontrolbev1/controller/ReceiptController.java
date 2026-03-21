@@ -3,7 +3,6 @@ package org.luun.kitchencontrolbev1.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.luun.kitchencontrolbev1.dto.request.ReceiptStatusUpdateRequest;
 import org.luun.kitchencontrolbev1.dto.response.ReceiptResponse;
 import org.luun.kitchencontrolbev1.enums.ReceiptStatus;
 import org.luun.kitchencontrolbev1.service.ReceiptService;
@@ -41,13 +40,11 @@ public class ReceiptController {
 
     @PatchMapping("/status")
     @Operation(summary = "Update receipts status (Use confirmReceipt for COMPLETED)")
-    public void updateReceiptStatus(@RequestBody ReceiptStatusUpdateRequest request) {
-        receiptService.updateReceiptStatus(request.getReceiptIds(), request.getStatus());
+    public void updateReceiptStatus(
+            @RequestParam Integer receiptId,
+            @RequestParam ReceiptStatus status
+    ) {
+        receiptService.updateReceiptStatus(receiptId, status);
     }
 
-    @DeleteMapping("/{receiptId}")
-    @Operation(summary = "Delete a DRAFT receipt")
-    public void deleteReceipt(@PathVariable Integer receiptId) {
-        receiptService.deleteReceipt(receiptId);
-    }
 }

@@ -15,19 +15,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class CompletedReceiptHandle implements ReceiptStatusHandler {
 
-    private final OrderService orderService;
     private final OrderDetailFillService orderDetailFillService;
     private final InventoryService inventoryService;
-
-    public CompletedReceiptHandle(@Lazy OrderService orderService,
-                                  OrderDetailFillService orderDetailFillService,
-                                  InventoryService inventoryService) {
-        this.orderService = orderService;
-        this.orderDetailFillService = orderDetailFillService;
-        this.inventoryService = inventoryService;
-    }
 
     @Override
     public ReceiptStatus supportedStatus() {
@@ -38,8 +30,6 @@ public class CompletedReceiptHandle implements ReceiptStatusHandler {
     public void handle(Receipt receipt) {
 
         receipt.setExportDate(LocalDateTime.now());
-
-        orderService.updateOrderStatus(receipt.getOrder().getOrderId(), OrderStatus.DISPATCHED, null);
 
         // Lấy ra danh sách các Lô hàng đã bị "giữ chỗ" lúc nãy cho Đơn hàng này
         List<OrderDetailFill> fills = orderDetailFillService

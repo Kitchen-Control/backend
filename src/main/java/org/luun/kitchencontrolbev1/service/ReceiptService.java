@@ -9,6 +9,5 @@ public interface ReceiptService {
     List<ReceiptResponse> getByOrderId(Integer orderId);
     List<ReceiptResponse> getByStatus(ReceiptStatus status);
     ReceiptResponse createReceipt(Integer orderId, String note);
-    void updateReceiptStatus(List<Integer> receiptIds, ReceiptStatus status);
-    void deleteReceipt(Integer receiptId);
+    void updateReceiptStatus(Integer receiptId, ReceiptStatus status);
 }

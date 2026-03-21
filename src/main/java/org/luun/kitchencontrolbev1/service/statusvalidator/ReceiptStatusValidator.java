@@ -10,8 +10,7 @@ import java.util.Set;
 public class ReceiptStatusValidator {
 
     private static final Map<ReceiptStatus, Set<ReceiptStatus>> TRANSITIONS = Map.of(
-            ReceiptStatus.DRAFT, Set.of(ReceiptStatus.CANCELED, ReceiptStatus.COMPLETED),
-            ReceiptStatus.CANCELED, Set.of(),
+            ReceiptStatus.READY, Set.of(ReceiptStatus.COMPLETED),
             ReceiptStatus.COMPLETED, Set.of()
     );
 

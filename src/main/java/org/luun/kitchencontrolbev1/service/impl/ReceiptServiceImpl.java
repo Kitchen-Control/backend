@@ -50,10 +50,9 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     @Override
     @Transactional
-    // Giai đoạn 3.2: Tạo Phiếu Xuất (Receipt Creation)
-    // Thủ kho kiểm tra rồi ấn tạo phiếu
     public ReceiptResponse createReceipt(Integer orderId, String note) {
         Order order = orderService.getOrderById(orderId);
+        orderService.updateOrderStatus(order.getOrderId(), OrderStatus.DISPATCHED, null);
 
         if (order.getStatus() != OrderStatus.PROCESSING) {
             throw new RuntimeException("Order status need to be PROCESSING");
@@ -62,7 +61,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         Receipt receipt = new Receipt();
         receipt.setReceiptCode("REC-" + System.currentTimeMillis());
         receipt.setOrder(order);
-        receipt.setStatus(ReceiptStatus.DRAFT);
+        receipt.setStatus(ReceiptStatus.READY);
         receipt.setExportDate(LocalDateTime.now());
         receipt.setNote(note);
 
@@ -72,34 +71,15 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     @Override
     @Transactional
-    public void updateReceiptStatus(List<Integer> receiptIds, ReceiptStatus newStatus) {
-        List<Receipt> receipts = receiptRepository.findAllById(receiptIds);
-
-        if (receipts.size() != receiptIds.size()) {
-            throw new RuntimeException("There is a receiptId which can not found");
-        }
-
-        for (Receipt receipt : receipts) {
-
-            receiptStatusValidation.validate(receipt.getStatus(), newStatus);
-
-            receiptStatusTransitionHandler.handle(receipt, newStatus);
-
-            receipt.setStatus(newStatus);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void deleteReceipt(Integer receiptId) {
+    public void updateReceiptStatus(Integer receiptId, ReceiptStatus newStatus) {
         Receipt receipt = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new RuntimeException("Receipt not found with id: " + receiptId));
+                .orElseThrow(() -> new RuntimeException("Receipt not found with id " + receiptId));
 
-        if (receipt.getStatus() != ReceiptStatus.DRAFT) {
-            throw new RuntimeException("Cannot delete a receipt that is not in DRAFT status.");
-        }
+        receiptStatusValidation.validate(receipt.getStatus(), newStatus);
 
-        receiptRepository.delete(receipt);
+        receiptStatusTransitionHandler.handle(receipt, newStatus);
+
+        receipt.setStatus(newStatus);
     }
 
     private ReceiptResponse mapToResponse(Receipt receipt) {
