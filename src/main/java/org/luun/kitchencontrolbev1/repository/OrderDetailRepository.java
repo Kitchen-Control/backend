@@ -18,4 +18,11 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             """)
     Float getTotalQuantityByProductIdAndOrderStatusIn(@Param("productId") Integer productId,
             @Param("statuses") List<OrderStatus> statuses);
+
+    // Reporting: Top Ordered Products
+    @Query("SELECT p.productName, SUM(od.quantity) as totalQty, p.unit " +
+           "FROM OrderDetail od JOIN od.product p JOIN od.order o " +
+           "WHERE o.status != 'CANCELED' " +
+           "GROUP BY p.productName, p.unit ORDER BY totalQty DESC")
+    List<Object[]> findTopOrderedProducts(org.springframework.data.domain.Pageable pageable);
 }

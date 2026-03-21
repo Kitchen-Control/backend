@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -37,4 +39,24 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     );
 
     List<Order> findByDelivery_DeliveryId(Integer deliveryId);
+
+    // Reporting: Count live orders today by status
+    @Query("SELECT o.status, COUNT(o) FROM Order o WHERE o.orderDate >= :startOfDay AND o.orderDate <= :endOfDay GROUP BY o.status")
+    List<Object[]> countOrdersByStatusToday(@Param("startOfDay") java.time.LocalDateTime startOfDay, @Param("endOfDay") java.time.LocalDateTime endOfDay);
+
+    // Reporting: Order volume by date range
+    @Query("SELECT CAST(o.orderDate AS date) as orderDate, COUNT(o) as totalOrders FROM Order o " +
+           "WHERE o.orderDate >= :startOfDay AND o.orderDate <= :endOfDay " +
+           "GROUP BY CAST(o.orderDate AS date) ORDER BY CAST(o.orderDate AS date) ASC")
+    List<Object[]> countOrdersByDateRange(@Param("startOfDay") java.time.LocalDateTime startOfDay, @Param("endOfDay") java.time.LocalDateTime endOfDay);
+
+    // Reporting: Total revenue by store
+    @Query("SELECT o.store.storeName, SUM(od.quantity * p.price) " +
+           "FROM Order o JOIN o.orderDetails od JOIN od.product p " +
+           "WHERE MONTH(o.orderDate) = :month AND YEAR(o.orderDate) = :year AND o.status = 'DONE' " +
+           "GROUP BY o.store.storeName ORDER BY SUM(od.quantity * p.price) DESC")
+    List<Object[]> calculateRevenueByStore(@Param("month") int month, @Param("year") int year);
+
+    // Reporting: Damaged/Canceled orders
+    Page<Order> findByStatusInOrderByOrderDateDesc(List<OrderStatus> statuses, Pageable pageable);
 }
