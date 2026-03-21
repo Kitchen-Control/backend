@@ -38,7 +38,7 @@ public class DeliveryController {
     }
 
     @PatchMapping("/{deliveryId}/status")
-    @Operation(summary = "Update delivery status (DRAFT -> WAITING -> DELIVERING)")
+    @Operation(summary = "Update delivery status (WAITING -> DELIVERING)")
     public void updateDeliveryStatus(
             @PathVariable Integer deliveryId,
             @RequestParam DeliveryStatus status) {

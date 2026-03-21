@@ -60,7 +60,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public List<InventoryResponse> getInventoryByProductType(ProductType productType) {
-        List<Inventory> inventories = inventoryRepository.findByProduct_ProductType(productType);
+        List<Inventory> inventories = inventoryRepository.findByProduct_ProductTypeOrderByExpiryDateAsc(productType);
         return inventories.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

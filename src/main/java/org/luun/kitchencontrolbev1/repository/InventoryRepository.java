@@ -24,5 +24,5 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
             "ORDER BY i.expiryDate ASC")
     List<Inventory> findValidInventoriesForProductOrderByExpiryDateAsc(@Param("productId") Integer productId);
 
-    List<Inventory> findByProduct_ProductType(ProductType productType);
+    List<Inventory> findByProduct_ProductTypeOrderByExpiryDateAsc(ProductType productType);
 }

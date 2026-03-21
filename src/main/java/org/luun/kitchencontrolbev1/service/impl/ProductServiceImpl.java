@@ -28,17 +28,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductResponse> getProductByType(String productType) {
+    public List<ProductResponse> getProductByType(ProductType productType) {
         // Convert the incoming String to the ProductType enum
-        ProductType type;
-        try {
-            type = ProductType.valueOf(productType.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            // Handle cases where the string is not a valid enum constant
-            throw new RuntimeException("Invalid product type: " + productType);
-        }
-
-        List<Product> products = productRepository.findByProductType(type);
+        List<Product> products = productRepository.findByProductType(productType);
         return products.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
