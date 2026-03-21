@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class DoneLogBatchHandler implements LogBatchStatusHandler{
 
-    private InventoryService inventoryService;
-    private InventoryTransactionService inventoryTransactionService;
+    private final InventoryService inventoryService;
+    private final InventoryTransactionService inventoryTransactionService;
 
     @Override
     public LogBatchStatus supportedStatus() {
