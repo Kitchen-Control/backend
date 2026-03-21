@@ -5,9 +5,7 @@ import org.luun.kitchencontrolbev1.dto.request.ProductionPlanDetailRequest;
 import org.luun.kitchencontrolbev1.dto.request.ProductionPlanRequest;
 import org.luun.kitchencontrolbev1.dto.response.ProductionPlanDetailResponse;
 import org.luun.kitchencontrolbev1.dto.response.ProductionPlanResponse;
-import org.luun.kitchencontrolbev1.entity.LogBatch;
-import org.luun.kitchencontrolbev1.entity.ProductionPlan;
-import org.luun.kitchencontrolbev1.entity.ProductionPlanDetail;
+import org.luun.kitchencontrolbev1.entity.*;
 import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
 import org.luun.kitchencontrolbev1.enums.ProductionPlanStatus;
@@ -18,6 +16,11 @@ import org.luun.kitchencontrolbev1.service.statustransitionhandler.PlanStatusTra
 import org.luun.kitchencontrolbev1.service.statusvalidator.ProductionPlanStatusValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.luun.kitchencontrolbev1.dto.response.MaterialRequirementResponse;
+import org.luun.kitchencontrolbev1.entity.Recipe;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -158,6 +161,47 @@ public class ProductionPlanServiceImpl implements ProductionPlanService {
         } else if (allDoneOrDamaged) {
             plan.setStatus(ProductionPlanStatus.COMPLETE_ONE_SECTION);
         }
+    }
+
+    @Override
+    public List<MaterialRequirementResponse> getMaterialRequirementsForPlan(Integer planId) {
+        ProductionPlan plan = getProductionPlanEntityById(planId);
+        Map<Integer, MaterialRequirementResponse> materialMap = new HashMap<>();
+        
+        if (plan.getProductionPlanDetails() != null) {
+            for (ProductionPlanDetail planDetail : plan.getProductionPlanDetails()) {
+                Product product = planDetail.getProduct();
+                if (product != null && product.getRecipes() != null && !product.getRecipes().isEmpty()) {
+                    Recipe recipe = product.getRecipes().get(0);
+                    Float yieldQuantity = recipe.getYieldQuantity() != null && recipe.getYieldQuantity() > 0 ? recipe.getYieldQuantity() : 1f;
+                    
+                    if (recipe.getRecipeDetails() != null) {
+                        for (RecipeDetail recipeDetail : recipe.getRecipeDetails()) {
+                            Product rawMaterial = recipeDetail.getRawMaterial();
+                            if (rawMaterial != null) {
+                                float requiredForOneYield = recipeDetail.getQuantity() != null ? recipeDetail.getQuantity() : 0f;
+                                float totalRequired = (requiredForOneYield / yieldQuantity) * planDetail.getQuantity();
+                                
+                                materialMap.compute(rawMaterial.getProductId(), (k, v) -> {
+                                    if (v == null) {
+                                        return MaterialRequirementResponse.builder()
+                                                .productId(rawMaterial.getProductId())
+                                                .productName(rawMaterial.getProductName())
+                                                .unit(rawMaterial.getUnit())
+                                                .totalRequiredQuantity(totalRequired)
+                                                .build();
+                                    } else {
+                                        v.setTotalRequiredQuantity(v.getTotalRequiredQuantity() + totalRequired);
+                                        return v;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return new java.util.ArrayList<>(materialMap.values());
     }
 
     private ProductionPlanResponse mapToResponse(ProductionPlan productionPlan) {

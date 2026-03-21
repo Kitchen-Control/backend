@@ -72,4 +72,10 @@ public class ProductionPlanController {
             @RequestParam ProductionPlanStatus status) {
         productionPlanService.updateProductionPlanStatus(id, status);
     }
+
+    @Operation(summary = "Get material requirements for a plan", description = "Calculates total raw materials required based on recipes.")
+    @GetMapping("/{id}/material-requirements")
+    public List<org.luun.kitchencontrolbev1.dto.response.MaterialRequirementResponse> getMaterialRequirementsForPlan(@PathVariable("id") Integer id) {
+        return productionPlanService.getMaterialRequirementsForPlan(id);
+    }
 }
