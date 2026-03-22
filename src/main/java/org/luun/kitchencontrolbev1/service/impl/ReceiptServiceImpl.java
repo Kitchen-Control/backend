@@ -52,11 +52,13 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Transactional
     public ReceiptResponse createReceipt(Integer orderId, String note) {
         Order order = orderService.getOrderById(orderId);
-        orderService.updateOrderStatus(order.getOrderId(), OrderStatus.DISPATCHED, null);
+//        orderService.updateOrderStatus(order.getOrderId(), OrderStatus.DISPATCHED, null);
 
         if (order.getStatus() != OrderStatus.PROCESSING) {
             throw new RuntimeException("Order status need to be PROCESSING");
         }
+
+        orderService.updateOrderStatus(order.getOrderId(), OrderStatus.DISPATCHED, null);
 
         Receipt receipt = new Receipt();
         receipt.setReceiptCode("REC-" + System.currentTimeMillis());
