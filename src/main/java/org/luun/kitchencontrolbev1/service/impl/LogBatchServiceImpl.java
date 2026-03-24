@@ -146,7 +146,10 @@ public class LogBatchServiceImpl implements LogBatchService {
 
         logBatch.setStatus(newStatus);
 
-        productionPlanService.checkPlanCompletion(logBatch.getPlan());
+        // Only check plan completion for PRODUCTION batches (PURCHASE batches have no plan)
+        if (logBatch.getPlan() != null) {
+            productionPlanService.checkPlanCompletion(logBatch.getPlan());
+        }
     }
 
     /**
