@@ -56,13 +56,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse updateProduct(Integer productId, Product updatedProduct) {
+    public ProductResponse updateProduct(Integer productId, ProductRequest updatedProduct) {
         Product product = getProductById(productId);
 
         product.setProductName(updatedProduct.getProductName());
-        product.setProductType(updatedProduct.getProductType());
         product.setUnit(updatedProduct.getUnit());
-        product.setShelfLifeDays(updatedProduct.getShelfLifeDays());
+        product.setShelfLifeDays(updatedProduct.getShelfLifeDay());
         product.setPrice(updatedProduct.getPrice());
 
         Product savedProduct = productRepository.save(product);

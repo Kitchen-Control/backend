@@ -12,6 +12,6 @@ public interface ProductService {
     List<ProductResponse> getProductByType(ProductType productType);
     Product getProductById(Integer productId);
     ProductResponse createProduct(ProductRequest request);
-    ProductResponse updateProduct(Integer productId, Product updatedProduct);
+    ProductResponse updateProduct(Integer productId, ProductRequest updatedProduct);
     List<ProductResponse> searchProductByProductName(String keyword);
 }

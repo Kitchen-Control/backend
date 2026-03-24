@@ -50,7 +50,7 @@ public class ProductController {
     @Operation(summary = "Update a product", description = "Updates the details of an existing product identified by its ID.")
     public ProductResponse updateProduct(
             @Parameter(description = "ID of the product to be updated") @PathVariable Integer productId, 
-            @RequestBody Product updatedProduct) {
+            @RequestBody ProductRequest updatedProduct) {
         return productService.updateProduct(productId, updatedProduct);
     }
 }
