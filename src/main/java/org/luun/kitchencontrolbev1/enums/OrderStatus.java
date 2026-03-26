@@ -5,6 +5,7 @@ public enum OrderStatus {
     PROCESSING,
     DISPATCHED,
     DELIVERING,
+    DELIVERED,
     PARTIAL_DELIVERED,
     DONE,
     DAMAGED,
