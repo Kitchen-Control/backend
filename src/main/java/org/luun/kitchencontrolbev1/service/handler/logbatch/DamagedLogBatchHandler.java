@@ -6,8 +6,8 @@ import org.luun.kitchencontrolbev1.entity.InventoryTransaction;
 import org.luun.kitchencontrolbev1.entity.LogBatch;
 import org.luun.kitchencontrolbev1.entity.WasteLog;
 import org.luun.kitchencontrolbev1.enums.LogBatchStatus;
+import org.luun.kitchencontrolbev1.repository.LogBatchRepository;
 import org.luun.kitchencontrolbev1.repository.WasteLogRepository;
-import org.luun.kitchencontrolbev1.service.InventoryService;
 import org.luun.kitchencontrolbev1.service.InventoryTransactionService;
 import org.springframework.stereotype.Component;
 
@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
-public class DamagedLogBatchHandler implements LogBatchStatusHandler{
+public class DamagedLogBatchHandler implements LogBatchStatusHandler {
 
-    private final InventoryService inventoryService;
     private final InventoryTransactionService inventoryTransactionService;
     private final WasteLogRepository wasteLogRepository;
+    private final LogBatchRepository logBatchRepository;
 
     @Override
     public LogBatchStatus supportedStatus() {
@@ -28,8 +28,16 @@ public class DamagedLogBatchHandler implements LogBatchStatusHandler{
 
     @Override
     public void handle(LogBatch batch) {
+
+        LogBatch logBatch = logBatchRepository.findById(batch.getBatchId()).
+                orElseThrow(() -> new RuntimeException("Can not found batch with id: " + batch.getBatchId()));
+
+        if (logBatch.getInventory() == null) {
+            return;
+        }
+
         // 1. Kiểm tra xem đã có Inventory cho lô này chưa
-        Inventory inventory = inventoryService.getInventoryByBatchId(batch.getBatchId());
+        Inventory inventory = logBatch.getInventory();
 
         // 2. kiểm tra Inventory còn hàng k
         if (!(inventory.getQuantity() > 0)) {
