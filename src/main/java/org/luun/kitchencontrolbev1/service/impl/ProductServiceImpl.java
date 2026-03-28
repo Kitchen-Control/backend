@@ -1,0 +1,101 @@
+package org.luun.kitchencontrolbev1.service.impl;
+
+import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.dto.request.ProductRequest;
+import org.luun.kitchencontrolbev1.dto.response.ProductResponse;
+import org.luun.kitchencontrolbev1.entity.Product;
+import org.luun.kitchencontrolbev1.enums.ProductType;
+import org.luun.kitchencontrolbev1.repository.ProductRepository;
+import org.luun.kitchencontrolbev1.service.ProductService;
+import org.luun.kitchencontrolbev1.service.InventoryService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ProductServiceImpl implements ProductService {
+    private final ProductRepository productRepository;
+    private final InventoryService inventoryService;
+
+    @Override
+    public List<ProductResponse> getProducts() {
+        List<Product> products = productRepository.findAll();
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductResponse> getProductByType(ProductType productType) {
+        // Convert the incoming String to the ProductType enum
+        List<Product> products = productRepository.findByProductType(productType);
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Product getProductById(Integer productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id " + productId));
+    }
+
+    @Override
+    public ProductResponse createProduct(ProductRequest request) {
+        Product product = new Product();
+        product.setProductName(request.getProductName());
+        product.setProductType(ProductType.valueOf(request.getProductType()));
+        product.setUnit(request.getUnit());
+        product.setPrice(request.getPrice());
+        product.setShelfLifeDays(request.getShelfLifeDay());
+
+        Product savedProduct = productRepository.save(product);
+        return mapToResponse(savedProduct);
+    }
+
+    @Override
+    public ProductResponse updateProduct(Integer productId, ProductRequest updatedProduct) {
+        Product product = getProductById(productId);
+
+        product.setProductName(updatedProduct.getProductName());
+        product.setUnit(updatedProduct.getUnit());
+        product.setShelfLifeDays(updatedProduct.getShelfLifeDay());
+        product.setPrice(updatedProduct.getPrice());
+
+        Product savedProduct = productRepository.save(product);
+        return mapToResponse(savedProduct);
+    }
+
+    @Override
+    public List<ProductResponse> searchProductByProductName(String keyword) {
+        List<Product> products = productRepository.searchProductByProductNameContainingIgnoreCase(keyword);
+        if (products.isEmpty()) {
+            return null;
+        }
+
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private ProductResponse mapToResponse(Product product) {
+        if (product == null)
+            return null;
+        ProductResponse response = new ProductResponse();
+        response.setProductId(product.getProductId());
+        response.setProductName(product.getProductName());
+        response.setPrice(product.getPrice());
+
+        if (product.getProductType() != null) {
+            response.setProductType(product.getProductType().toString());
+        }
+        response.setUnit(product.getUnit());
+        response.setShelfLifeDays(product.getShelfLifeDays());
+
+        response.setAvailableStock(inventoryService.getAvailableStock(product.getProductId()));
+
+        return response;
+    }
+}

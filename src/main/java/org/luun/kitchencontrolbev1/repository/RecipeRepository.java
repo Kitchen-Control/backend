@@ -1,0 +1,10 @@
+package org.luun.kitchencontrolbev1.repository;
+
+import org.luun.kitchencontrolbev1.entity.Recipe;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface RecipeRepository extends JpaRepository<Recipe,Long> {
+    List<Recipe> findByRecipeNameContainsIgnoreCase(String keyword);
+}

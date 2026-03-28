@@ -1,0 +1,34 @@
+package org.luun.kitchencontrolbev1.service.handler.delivery;
+
+import lombok.RequiredArgsConstructor;
+import org.luun.kitchencontrolbev1.entity.Delivery;
+import org.luun.kitchencontrolbev1.entity.Order;
+import org.luun.kitchencontrolbev1.enums.DeliveryStatus;
+import org.luun.kitchencontrolbev1.enums.OrderStatus;
+import org.luun.kitchencontrolbev1.service.OrderService;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class DeliveringDeliveryHandler implements DeliveryStatusHandler {
+
+    private final OrderService orderService;
+
+    @Override
+    public DeliveryStatus supportedStatus() {
+        return DeliveryStatus.DELIVERING;
+    }
+
+    @Override
+    public void handle(Delivery delivery) {
+
+        List<Order> orders = delivery.getOrders();
+        orders.forEach(order -> orderService.updateOrderStatus(
+                order.getOrderId(),
+                OrderStatus.DELIVERING, null
+        ));
+
+    }
+}
