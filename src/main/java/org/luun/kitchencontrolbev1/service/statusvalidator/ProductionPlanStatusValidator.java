@@ -11,7 +11,8 @@ public class ProductionPlanStatusValidator {
 
     private static final Map<ProductionPlanStatus, Set<ProductionPlanStatus>> TRANSITIONS = Map.of(
             ProductionPlanStatus.DRAFT, Set.of(ProductionPlanStatus.WAITING, ProductionPlanStatus.CANCEL),
-            ProductionPlanStatus.WAITING, Set.of(ProductionPlanStatus.PROCESSING),
+            ProductionPlanStatus.WAITING, Set.of(ProductionPlanStatus.DISPATCHED),
+            ProductionPlanStatus.DISPATCHED, Set.of(ProductionPlanStatus.PROCESSING),
             ProductionPlanStatus.PROCESSING, Set.of(ProductionPlanStatus.COMPLETE_ONE_SECTION, ProductionPlanStatus.DONE),
             ProductionPlanStatus.COMPLETE_ONE_SECTION, Set.of(),
             ProductionPlanStatus.DONE, Set.of(),
