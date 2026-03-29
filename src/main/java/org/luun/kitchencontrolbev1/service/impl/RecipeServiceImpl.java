@@ -9,9 +9,9 @@ import org.luun.kitchencontrolbev1.entity.Product;
 import org.luun.kitchencontrolbev1.entity.Recipe;
 import org.luun.kitchencontrolbev1.entity.RecipeDetail;
 import org.luun.kitchencontrolbev1.enums.ProductType;
-import org.luun.kitchencontrolbev1.repository.ProductRepository;
 import org.luun.kitchencontrolbev1.repository.RecipeDetailRepository;
 import org.luun.kitchencontrolbev1.repository.RecipeRepository;
+import org.luun.kitchencontrolbev1.service.ProductService;
 import org.luun.kitchencontrolbev1.service.RecipeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecipeServiceImpl implements RecipeService {
     private final RecipeRepository recipeRepository;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
     private final RecipeDetailRepository recipeDetailRepository;
 
     @Override
@@ -53,8 +53,7 @@ public class RecipeServiceImpl implements RecipeService {
         recipe.setDescription(recipeRequest.getDescription());
 
         // 2. Tìm và set Sản phẩm chính (Finished Product) cho Recipe
-        Product mainProduct = productRepository.findById(recipeRequest.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + recipeRequest.getProductId()));
+        Product mainProduct = productService.getProductById(recipeRequest.getProductId());
 
         //Checking if the product is a FINISHED_PRODUCT
         if (mainProduct.getProductType() == ProductType.RAW_MATERIAL) {
@@ -70,8 +69,7 @@ public class RecipeServiceImpl implements RecipeService {
         if (recipeRequest.getRecipeDetails() != null) {
             for (RecipeDetailRequest detailRequest : recipeRequest.getRecipeDetails()) {
                 // Finding raw material by ID
-                Product rawMaterial = productRepository.findById(detailRequest.getRawMaterialId())
-                        .orElseThrow(() -> new RuntimeException("Raw material not found with id: " + detailRequest.getRawMaterialId()));
+                Product rawMaterial = productService.getProductById(detailRequest.getRawMaterialId());
 
                 if (rawMaterial.getProductType() != ProductType.RAW_MATERIAL) {
                     throw new RuntimeException("Product " + rawMaterial.getProductName() + " is not a RAW_MATERIAL");
