@@ -14,6 +14,7 @@ import org.luun.kitchencontrolbev1.repository.WasteLogRepository;
 import org.luun.kitchencontrolbev1.service.WasteLogService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,6 +60,20 @@ public class WasteLogServiceImpl implements WasteLogService {
         }
         WasteLog savedLog = wasteLogRepository.save(log);
         return mapToResponse(savedLog);
+    }
+
+    @Override
+    public List<WasteLogResponse> getWasteLogsByDateRange(LocalDate startDate, LocalDate endDate) {
+        // 1. Chuyển LocalDate sang LocalDateTime (bao trọn vẹn cả ngày giờ bắt đầu và kết thúc)
+        LocalDateTime startDateTime = startDate.atStartOfDay(); // 00:00:00
+        // Lấy đến khoảng thời gian cuối cùng của ngày là 23:59:59.999999999
+        LocalDateTime endDateTime = endDate.atTime(java.time.LocalTime.MAX);
+        // 2. Lấy dữ liệu từ Repository
+        List<WasteLog> logs = wasteLogRepository.findByCreatedAtBetween(startDateTime, endDateTime);
+        // 3. Map sang DTO Response giống hệt như cách bạn đang làm ở getAllWasteLogs()
+        return logs.stream()
+                .map(this::mapToResponse) // Nếu bạn đã bỏ hàm nội bộ mapToResponse hoặc có mapper thì dùng nó
+                .collect(Collectors.toList());
     }
 
     // Hàm phụ trợ Converter

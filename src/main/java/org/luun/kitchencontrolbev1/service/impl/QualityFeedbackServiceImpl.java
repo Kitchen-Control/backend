@@ -64,7 +64,7 @@ public class QualityFeedbackServiceImpl implements QualityFeedbackService {
         if (feedback.getOrder() != null) {
             response.setOrderId(feedback.getOrder().getOrderId());
         }
-
+        response.setStoreId(feedback.getOrder().getStore().getStoreId());
         response.setRating(feedback.getRating());
         response.setComment(feedback.getComment());
         response.setCreatedAt(feedback.getCreatedAt());
